@@ -52,6 +52,8 @@ namespace feifei
 		Int,
 		Fp32,
 		Fp64,
+		Fp16,
+		Bf16,
 		String,
 		UInt8,
 		Int8,
@@ -652,9 +654,11 @@ namespace feifei
 	typedef enum ArgIdEnum
 	{
 		CMD_ARG_HELP,
-		GEMM_ARG_WV,
+		GEMM_ARG_TYPE,
 		GEMM_ARG_MT0,
 		GEMM_ARG_MT1,
+		GEMM_ARG_WT0,
+		GEMM_ARG_WT1,
 		GEMM_ARG_DU,
 		GEMM_ARG_TENSILE
 	} E_ArgId;
@@ -691,9 +695,11 @@ namespace feifei
 		void initCmdArgs()
 		{
 			addOneArg(CMD_ARG_HELP, E_DataType::String, "help", 'h', "help", "help infomation");
-			addOneArg(GEMM_ARG_WV, E_DataType::Int, "1", 'w', "wave", "wave number per simd. (1)");
+			addOneArg(GEMM_ARG_TYPE, E_DataType::Int, "1", 'd', "data-type", "data type. (1)");
 			addOneArg(GEMM_ARG_MT0, E_DataType::Int, "1", 'm', "mfma-pttn0", "mfma times in m dim. (1)");
 			addOneArg(GEMM_ARG_MT1, E_DataType::Int, "1", 'n', "mfma-pttn1", "mfma times in n dim. (1)");
+			addOneArg(GEMM_ARG_WT0, E_DataType::Int, "1", 'x', "wave-pttn0", "wave number in m dim. (1)");
+			addOneArg(GEMM_ARG_WT1, E_DataType::Int, "1", 'y', "wave-pttn1", "wave number in n dim. (1)");
 			addOneArg(GEMM_ARG_DU, E_DataType::Int, "16", 'u', "depth-u", "k dim loop unroll. (16)");
 			addOneArg(GEMM_ARG_TENSILE, E_DataType::Int, "0", 't', "tensile", "if use tensile format. (0)");
 		}

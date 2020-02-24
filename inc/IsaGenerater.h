@@ -3,6 +3,7 @@
 /* 因此只需要include BasicClass.h										*/
 /************************************************************************/
 #pragma once
+#include "../inc/ff_hip_runtime.h"
 
 namespace feifei
 {
@@ -1075,7 +1076,7 @@ namespace feifei
 				currToken.valChar = *src_pos;
 				src_pos++;
 			}
-			else if (*src_pos == '？' || *src_pos == ':')
+			else if (*src_pos == '?' || *src_pos == ':')
 			{
 				currToken.type = E_Token::Other;
 				currToken.valChar = *src_pos;

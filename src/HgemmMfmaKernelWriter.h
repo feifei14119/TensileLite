@@ -9,14 +9,13 @@ using namespace feifei;
 #define FP32_SZ	(4)
 typedef struct T_GemmMfmaKernelParamType
 {
-	uint32_t gemmType; // 0 debug; 1=fp32; 2=fp16; 3=bf16
+	E_DataType dataType;
 	uint32_t waveMethod; // 1=1 wave; 2=2 wave
 	bool enTensileLayout;
 
 	uint32_t M, N, K;
 	uint32_t mfma_pttn_per_wave[2];
 	uint32_t wave_pttn_per_group[2];
-	uint32_t wave_num_per_simd; // math wave !!!! not total wave
 	uint32_t DepthU;	// loop unroll
 	uint32_t dbgNum;
 }T_GemmMfmaKernelParam;
@@ -29,27 +28,21 @@ public:
 		k_param = kernelParam;
 		dbg_buff_len = k_param.dbgNum;
 
-		switch (k_param.gemmType)
+		switch (k_param.dataType)
 		{
-		case 0:
+		case E_DataType::Fp32:
 			elem_sz = FP32_SZ;
 			mfma_k = 2;
 			mfma_inst = "v_mfma_f32_32x32x2f32";
 			kernelName = "sgemm_col_TN_MT";
 			break;
-		case 1:
-			elem_sz = FP32_SZ;
-			mfma_k = 2;
-			mfma_inst = "v_mfma_f32_32x32x2f32";
-			kernelName = "sgemm_col_TN_MT";
-			break;
-		case 2:
+		case E_DataType::Fp16:
 			elem_sz = FP16_SZ;
 			mfma_k = 8;
 			mfma_inst = "v_mfma_f32_32x32x8f16";
 			kernelName = "hgemm_col_TN_MT";
 			break;
-		case 3:
+		case E_DataType::Bf16:
 			elem_sz = BF16_SZ;
 			mfma_k = 4;
 			mfma_inst = "v_mfma_f32_32x32x4bf16";
@@ -63,7 +56,6 @@ public:
 			break;
 		}
 
-		wave_num_per_simd = k_param.wave_num_per_simd;
 		mfma_pttn0_per_wv = k_param.mfma_pttn_per_wave[0];
 		mfma_pttn1_per_wv = k_param.mfma_pttn_per_wave[1];
 		wv_pttn0_per_grp = k_param.wave_pttn_per_group[0];
@@ -104,6 +96,8 @@ protected:
 	T_Var v_tid_in_wave;
 	T_Var v_wvid_in_grp;
 	T_Var s_wvid_in_grp;
+	T_Var v_sem_addr;
+	T_Var v_sem_data;
 
 	// -----------------------------------------------------------------------
 	// config
@@ -117,7 +111,7 @@ protected:
 	// -----------------------------------------------------------------------
 	// workload
 	// -----------------------------------------------------------------------
-	uint32_t wave_num_per_grp; // 每个group总共的wave数
+	uint32_t math_wave_num_per_grp; // 每个group总共的math wave数
 
 	// -----------------------------------------------------------------------
 	// matrix a
@@ -335,10 +329,20 @@ protected:
 
 		if (en_dirct_glb_to_lds)
 		{
-			glb_load_instr_dw_sz = 1;
-			glb_store_instr_dw_sz = 2;
-			lds_wr_instr_dw_sz = 1;
-			lds_rd_instr_dw_sz = 2;
+			if (k_param.dataType == E_DataType::Fp32)
+			{
+				glb_load_instr_dw_sz = 1;
+				glb_store_instr_dw_sz = 4;
+				lds_wr_instr_dw_sz = 1;
+				lds_rd_instr_dw_sz = 1;
+			}
+			else
+			{
+				glb_load_instr_dw_sz = 1;
+				glb_store_instr_dw_sz = 2;
+				lds_wr_instr_dw_sz = 1;
+				lds_rd_instr_dw_sz = 2;
+			}
 			glb_load_instr_sz = glb_load_instr_dw_sz * GPR_SZ;
 			glb_store_instr_sz = glb_store_instr_dw_sz * GPR_SZ;
 			lds_wr_instr_sz = lds_wr_instr_dw_sz * GPR_SZ;
@@ -357,13 +361,13 @@ protected:
 		}
 
 		// workload
-		wave_num_per_grp = wave_num_per_simd * SIMD_PER_CU;
+		math_wave_num_per_grp = wv_pttn0_per_grp * wv_pttn1_per_grp;
 
 		elem_num0_per_grp = mfma_m * mfma_pttn0_per_wv * wv_pttn0_per_grp;
 		elem_num1_per_grp = mfma_n * mfma_pttn1_per_wv * wv_pttn1_per_grp;
 		mfma_blk0_per_grp = elem_num0_per_grp / mfma_m;
 		mfma_blk1_per_grp = elem_num1_per_grp / mfma_n;
-		mfma_blk_per_wv = mfma_blk0_per_grp * mfma_blk1_per_grp / wave_num_per_grp;
+		mfma_blk_per_wv = mfma_blk0_per_grp * mfma_blk1_per_grp / math_wave_num_per_grp;
 		mfma_k_times_per_wv = k_param.DepthU / mfma_k;
 
 		// matrix a
@@ -371,11 +375,11 @@ protected:
 		a_fetch_wave_shape0 = a_fetch_ele_num0_per_wv * elem_sz / GPR_SZ;
 		a_fetch_wave_shape1 = WAVE_SIZE / a_fetch_wave_shape0;
 		a_fetch_ele_num1_per_wv = a_fetch_wave_shape1;
-		a_fetch_times = elem_num0_per_grp / wave_num_per_grp / a_fetch_ele_num1_per_wv;
+		a_fetch_times = elem_num0_per_grp / math_wave_num_per_grp / a_fetch_ele_num1_per_wv;
 
 		a_lds_sz_per_wv_per_time = WAVE_SIZE * GPR_SZ + lds_pad_byte;
 		a_lds_sz_per_wv = a_lds_sz_per_wv_per_time * a_fetch_times;
-		a_lds_sz_per_grp = a_lds_sz_per_wv * wave_num_per_grp;
+		a_lds_sz_per_grp = a_lds_sz_per_wv * math_wave_num_per_grp;
 
 		a_lds_read_step_1 = mfma_k * elem_sz;
 		a_lds_read_step_2 = (mfma_m / a_fetch_ele_num1_per_wv) * a_lds_sz_per_wv_per_time;// 因为有padding，所以按照存储的行数进行计算
@@ -385,11 +389,11 @@ protected:
 		b_fetch_wave_shape0 = b_fetch_ele_num0_per_wv * elem_sz / GPR_SZ;
 		b_fetch_wave_shape1 = WAVE_SIZE / b_fetch_wave_shape0;
 		b_fetch_ele_num1_per_wv = b_fetch_wave_shape1;
-		b_fetch_times = elem_num1_per_grp / wave_num_per_grp / b_fetch_ele_num1_per_wv;
+		b_fetch_times = elem_num1_per_grp / math_wave_num_per_grp / b_fetch_ele_num1_per_wv;
 
 		b_lds_sz_per_wv_per_time = WAVE_SIZE * GPR_SZ + lds_pad_byte;
 		b_lds_sz_per_wv = b_lds_sz_per_wv_per_time * b_fetch_times;
-		b_lds_sz_per_grp = b_lds_sz_per_wv * wave_num_per_grp;
+		b_lds_sz_per_grp = b_lds_sz_per_wv * math_wave_num_per_grp;
 
 		b_lds_read_step_1 = mfma_k * elem_sz;
 		b_lds_read_step_2 = (mfma_n / b_fetch_ele_num1_per_wv) * b_lds_sz_per_wv_per_time;
@@ -404,10 +408,10 @@ protected:
 
 		a_mfma_times = mfma_k_times_per_wv * mfma_pttn0_per_wv;
 		b_mfma_times = mfma_k_times_per_wv * mfma_pttn1_per_wv;
-//		a_mfma_times = 1 * mfma_pttn0_per_wv;
-//		b_mfma_times = 1 * mfma_pttn1_per_wv;
+		//		a_mfma_times = 1 * mfma_pttn0_per_wv;
+		//		b_mfma_times = 1 * mfma_pttn1_per_wv;
 
-		// interface
+				// interface
 		if (IsaArch >= E_IsaArch::Gfx908)	en_mfma = true;
 		else								en_mfma = false;
 		if (k_param.enTensileLayout == true)
@@ -424,12 +428,12 @@ protected:
 
 		if (k_param.waveMethod == 1)
 		{
-			group_sz = dim(wave_num_per_grp * WAVE_SIZE, 1, 1);
+			group_sz = dim(math_wave_num_per_grp * WAVE_SIZE, 1, 1);
 			group_num = dim(k_param.M / elem_num0_per_grp, k_param.N / elem_num1_per_grp, 1);
 		}
 		else
 		{
-			group_sz = dim(wave_num_per_grp * WAVE_SIZE * 2, 1, 1);
+			group_sz = dim(math_wave_num_per_grp * WAVE_SIZE * 2, 1, 1);
 			group_num = dim(k_param.M / elem_num0_per_grp, k_param.N / elem_num1_per_grp, 1);
 		}
 		global_sz = group_sz * group_num;
@@ -450,27 +454,11 @@ protected:
 private:
 	void write_sigle_wave_program()
 	{
-		address_a_t();
-		address_b_n();
-		address_d_n();
-
-		// -----------------------------------------------------------------------
-		//en_mfma = true;
-		//f_fill_lds(1.73);
-		//fetch_once();
-		//debug_sync();
-		//f_dump_lds(s_args[k_arg_pDbg], 0, false);
-		//mfma_once();
-		//debug_sync();
-
-		//gemm_loop_uninterleave();
-		//gemm_loop();
-
-		// -----------------------------------------------------------------------
-		store_result();
 	}
 	void write_double_wave_program()
 	{
+		v_sem_addr = newVgpr("sem_addr", 1, 1);
+		v_sem_data = newVgpr("sem_data", 1, 1);
 		// =======================================================================
 		// get hardware wave id
 		// =======================================================================
@@ -481,11 +469,36 @@ private:
 
 		// ----------------------------------------------------
 		// thread re-order
-		op3("s_lshr_b32", s_branch_id, s_wvid_in_grp, log2Int(4));// branch_id = wave_id / SIMD_PER_CU
-		op2("s_mov_b32", s_wvid_in_grp, s_hw_simd_id);
-		op2("v_mov_b32", v_wvid_in_grp, s_hw_simd_id);
-		op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
-		op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
+		op3("s_lshr_b32", s_branch_id, s_wvid_in_grp, log2Int(math_wave_num_per_grp));// branch_id = wave_id / SIMD_PER_CU
+		if (math_wave_num_per_grp == 1)
+		{
+			op2("s_mov_b32", s_wvid_in_grp, 0);
+			op2("v_mov_b32", v_wvid_in_grp, 0);
+			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
+			op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
+		}
+		if (math_wave_num_per_grp == 2)
+		{
+			op3("s_and_b32", s_tmp1, 1, s_wvid_in_grp);
+			op2("s_mov_b32", s_wvid_in_grp, s_tmp1);
+			op2("v_mov_b32", v_wvid_in_grp, s_tmp1);
+			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
+			op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
+		}
+		if (math_wave_num_per_grp == 3)
+		{
+			op2("s_mov_b32", s_wvid_in_grp, 0);
+			op2("v_mov_b32", v_wvid_in_grp, 0);
+			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
+			op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
+		}
+		if (math_wave_num_per_grp >= SIMD_PER_CU)
+		{
+			op2("s_mov_b32", s_wvid_in_grp, s_hw_simd_id);
+			op2("v_mov_b32", v_wvid_in_grp, s_hw_simd_id);
+			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
+			op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
+		}
 
 		address_a_t();
 		address_b_n();
@@ -505,38 +518,21 @@ private:
 
 		// ----------------------------------------------------
 		write_fetch_wave_program();
-		op1("s_branch", l_end_prg);
 
 		wrLaber(l_math_wave);
 		write_math_wave_program();
 	}
 	void write_fetch_wave_program()
 	{
-		// -----------------------------------------------------------------------
-		debug_sync();
-		exec_mark2();
-
 		fetch_loop();
-
-		// -----------------------------------------------------------------------
-		debug_sync();
 		op0("s_endpgm");
 	}
 	void write_math_wave_program()
 	{
-		debug_sync(); 
-		exec_mark2();
-
-		mfma_loop();
-		/*if ((a_mfma_times < 16)&&(b_mfma_times < 16))
-			mfma_loop();
-		else
-			mfma_loop2();*/
-
-		// -----------------------------------------------------------------------
-		debug_sync();
 		address_d_n();
-		debug_sync();
+		math_loop();
+		op1("s_nop", 32);
+		op1("s_nop", 32);
 		store_result();
 	}
 
@@ -819,7 +815,7 @@ private:
 			op3("s_lshl_b32", s_d_grp_col_id_base, s_bid_x, log2Int(elem_num0_per_grp * elem_sz / GPR_SZ));//DWORD group_col_base = MT0*group_id_x (element); 横向每个group的起始列号
 			op3("s_lshl_b32", s_d_grp_row_id_base, s_bid_y, log2Int(elem_num1_per_grp));// group_row_base = MT1*group_id_y ;
 
-			// wave base row index in group (element)
+			// wave base row index in group (DWORD)
 			T_Var v_d_wv_row_id_in_grp = newVgpr("d_wv_row_in_grp");
 			T_Var v_d_wv_col_id_in_grp = newVgpr("d_wv_col_in_grp");
 			op3("s_lshr_b32", s_tmp1, s_wvid_in_grp, log2Int(wv_pttn0_per_grp)); // wave_pttn_row_id_in_group = wave_id / wave_pattan0; wave 在 wave pattan of group 的第几行
@@ -828,14 +824,14 @@ private:
 			//op3("v_lshlrev_b32", v_d_wv_col_id_in_grp, log2Int(mfma_sz0_per_wv), s_tmp1);// wave_col_id_in_group = mfma_size0_per_wave * wave_pttn_col_id_in_group
 			op3("v_lshlrev_b32", v_d_wv_col_id_in_grp, log2Int(mfma_sz0_per_wv * elem_sz / GPR_SZ), s_tmp1); // DWORD
 
-			// thread row & col index in mfma (element) 
+			// thread row & col index in mfma (DWORD) 
 			T_Var v_d_trd_row_id_in_mfma = newVgpr("d_trd_row_id_in_mfma");
 			T_Var v_d_trd_lane_id_in_mfma = newVgpr("d_trd_lane_id_in_mfma");
 			T_Var v_d_trd_col_id_in_mfma = newVgpr("d_trd_col_id_in_mfma");
 			op3("v_and_b32", v_d_trd_row_id_in_mfma, mfma_m - 1, v_tid_in_wave); // thread_row_id_in_mfma = v_tid_in_wave % mfma_m; thread在mfma结果的纵向哪一行
 			op3("v_lshrrev_b32", v_d_trd_lane_id_in_mfma, log2Int(mfma_m), v_tid_in_wave); // thread_lane_id_in_mfma = v_tid_in_wave / mfma_m; thread在mfma结果的横向哪一lane,(每lane是4列)
 			//op3("v_lshlrev_b32", v_d_trd_col_id_in_mfma, log2Int(mfma_t), v_d_trd_lane_id_in_mfma); // thread_col_id_in_mfma = mfma_tt * thread_lane_id_in_mfma; thread在mfma结果的横向哪一列(element)
-			op3("v_lshlrev_b32", v_d_trd_col_id_in_mfma, log2Int(2), v_d_trd_lane_id_in_mfma); // 每个lane = 2 DWORD
+			op3("v_lshlrev_b32", v_d_trd_col_id_in_mfma, log2Int(mfma_t * elem_sz / GPR_SZ), v_d_trd_lane_id_in_mfma); // 每个lane = mfma_t 元素
 
 			// thread index offset (element)
 			T_Var v_d_trd_row_idx = newVgpr("d_trd_row_idx");
@@ -854,7 +850,7 @@ private:
 			uint32_t mfma_lan_per_tt = WAVE_SIZE / mfma_m;
 			mfma_dgpr_tt_sz = mfma_t * elem_sz / GPR_SZ;
 			d_glb_step1 = mfma_t * elem_sz * mfma_lan_per_tt; // 同一笔mfma指令里每mfma_tt个vgpr的步进(Byte)
-			d_glb_step1 = 16;
+			if (k_param.dataType == E_DataType::Fp16)	d_glb_step1 = 16;
 			d_glb_step2 = mfma_m * elem_sz; // MT0方向(不切换mfma_pattan行时),同thread同R0的步进(Byte),需要累加到立即数偏移
 			T_Var v_d_glb_step3 = newVgpr("d_glb_step3");// MT1方向(切换mfma_pattan行时),同thread同R0的步进(Byte),需要累加到v_addr_offset上
 			op3("v_lshlrev_b32", v_tmp1, log2Int(mfma_n), s_args[k_arg_StrideD0]);// d_glb_step3 = mfma_n * stride
@@ -881,306 +877,10 @@ private:
 			delVar(v_d_glb_step3);
 		}
 	}
-
-	void gemm_loop()
-	{
-		v_mfma_a_ping = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
-		v_mfma_b_ping = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
-		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
-		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
-		acc_mfma_d = newAgpr("mfma_d", mfma_dgpr_per_mfma * mfma_blk_per_wv);
-
-		// =======================================================================
-		// init acc gpr
-		// =======================================================================
-		for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
-			op2("v_accvgpr_write", acc_mfma_d + i, 0);
-
-		// =======================================================================
-		// enter loop
-		// =======================================================================
-		// lds ping write
-		{
-			// lds A ping write
-			op2("s_mov_b32", "m0", s_a_lds_write_ping);
-			for (uint32_t i = 0; i < a_fetch_times; i++)
-			{
-				buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
-				op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);// switch to pang write
-			}
-			// lds B ping write
-			op2("s_mov_b32", "m0", s_b_lds_write_ping);
-			for (uint32_t i = 0; i < b_fetch_times; i++)
-			{
-				buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
-				op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);// switch to pang write
-			}
-		}
-
-		// =======================================================================
-		// loop
-		// =======================================================================
-		T_Var l_end_gemm_loop = newLaber("END_GEMM_LOOP");
-		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU * 2)); // *2 for ping pang unroll		
-		op2("s_cmp_le_u32", s_tmp1, 1); // if(loop_cnt <= 1) scc = 1;
-		op1("s_cbranch_scc1", l_end_gemm_loop);// if(scc == 1) no loop;
-		op3("s_sub_u32", s_tmp1, s_tmp1, 1);// sub enter and exit loop
-		T_Var s_gemm_loop_cnt;
-		s_gemm_loop_cnt = f_s_loop(s_tmp1, "GEMM_LOOP");
-		{
-			// -----------------------------------------------------------------------
-			// gemm lds ping, write lds pang
-			// lds pang write
-			{
-				// lds A pang write
-				op2("s_mov_b32", "m0", s_a_lds_write_pang);
-				for (uint32_t i = 0; i < a_fetch_times; i++)
-				{
-					buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
-					op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);// switch to ping write
-				}
-				// lds B pang write
-				op2("s_mov_b32", "m0", s_b_lds_write_pang);
-				for (uint32_t i = 0; i < b_fetch_times; i++)
-				{
-					buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
-					op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);// switch to ping write
-				}
-			}
-
-			// gemm lds ping
-			s_wait_vmcnt(a_fetch_times + b_fetch_times);	op0("s_barrier");
-			{
-				for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-				{
-					for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-					{
-						ds_read_dword(lds_rd_instr_dw_sz,
-							v_mfma_a_ping + (lds_rd_instr_dw_sz * (m + k * mfma_pttn0_per_wv)),
-							v_a_lds_read_ping,
-							a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-					}
-					for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-					{
-						ds_read_dword(lds_rd_instr_dw_sz,
-							v_mfma_b_ping + (lds_rd_instr_dw_sz * (n + k * mfma_pttn1_per_wv)),
-							v_b_lds_read_ping,
-							b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-					}
-				}
-
-				for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-				{
-					uint32_t wait_cnt = (mfma_pttn0_per_wv + mfma_pttn1_per_wv) * (k_param.DepthU / mfma_k - k - 1);
-					if (wait_cnt >= 16)wait_cnt = 15;
-					s_wait_lgkmcnt(wait_cnt);
-					for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-					{
-						for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-						{
-							uint32_t a_idx_offset = mfma_agpr_per_mfma * (m + k * mfma_pttn0_per_wv);
-							uint32_t b_idx_offset = mfma_bgpr_per_mfma * (n + k * mfma_pttn1_per_wv);
-							uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-							op4(mfma_inst,
-								(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-								(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-								(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-								(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-						}
-					}
-				}
-			}
-
-			// -----------------------------------------------------------------------
-			// gemm lds pang, write lds ping
-			// lds ping write
-			{
-				// lds A ping write
-				op2("s_mov_b32", "m0", s_a_lds_write_ping);
-				for (uint32_t i = 0; i < a_fetch_times; i++)
-				{
-					buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
-					op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);// switch to pang write
-				}
-				// lds B ping write
-				op2("s_mov_b32", "m0", s_b_lds_write_ping);
-				for (uint32_t i = 0; i < b_fetch_times; i++)
-				{
-					buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
-					op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);// switch to pang write
-				}
-			}
-
-			// gemm lds pang
-			s_wait_vmcnt(a_fetch_times + b_fetch_times);	op0("s_barrier");
-			{
-				for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-				{
-					for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-					{
-						ds_read_dword(lds_rd_instr_dw_sz,
-							v_mfma_a_pang + (lds_rd_instr_dw_sz * (m + k * mfma_pttn0_per_wv)),
-							v_a_lds_read_pang,
-							a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-					}
-					for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-					{
-						ds_read_dword(lds_rd_instr_dw_sz,
-							v_mfma_b_pang + (lds_rd_instr_dw_sz * (n + k * mfma_pttn1_per_wv)),
-							v_b_lds_read_pang,
-							b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-					}
-				}
-
-				for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-				{
-					uint32_t wait_cnt = (mfma_pttn0_per_wv + mfma_pttn1_per_wv) * (k_param.DepthU / mfma_k - k - 1);
-					if (wait_cnt >= 16)wait_cnt = 15;
-					s_wait_lgkmcnt(wait_cnt);
-					for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-					{
-						for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-						{
-							uint32_t a_idx_offset = mfma_agpr_per_mfma * (m + k * mfma_pttn0_per_wv);
-							uint32_t b_idx_offset = mfma_bgpr_per_mfma * (n + k * mfma_pttn1_per_wv);
-							uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-							op4(mfma_inst,
-								(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-								(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-								(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-								(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-						}
-					}
-				}
-			}
-		}
-		f_e_loop(s_gemm_loop_cnt, "GEMM_LOOP");
-		wrLaber(l_end_gemm_loop);
-
-		// =======================================================================
-		// exit loop
-		// =======================================================================
-		// -----------------------------------------------------------------------
-		// gemm lds ping, write lds pang
-		// lds ping write
-		{
-			// lds A pang write
-			op2("s_mov_b32", "m0", s_a_lds_write_pang);
-			for (uint32_t i = 0; i < a_fetch_times; i++)
-			{
-				buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
-				op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);// switch to ping write
-			}
-			// lds B pang write
-			op2("s_mov_b32", "m0", s_b_lds_write_pang);
-			for (uint32_t i = 0; i < b_fetch_times; i++)
-			{
-				buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
-				op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);// switch to ping write
-			}
-		}
-
-		// gemm lds ping
-		s_wait_vmcnt(a_fetch_times + b_fetch_times);	op0("s_barrier");
-		{
-			for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					ds_read_dword(lds_rd_instr_dw_sz,
-						v_mfma_a_ping + (lds_rd_instr_dw_sz * (m + k * mfma_pttn0_per_wv)),
-						v_a_lds_read_ping,
-						a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-				}
-				for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-				{
-					ds_read_dword(lds_rd_instr_dw_sz,
-						v_mfma_b_ping + (lds_rd_instr_dw_sz * (n + k * mfma_pttn1_per_wv)),
-						v_b_lds_read_ping,
-						b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-				}
-			}
-
-			for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-			{
-				uint32_t wait_cnt = (mfma_pttn0_per_wv + mfma_pttn1_per_wv) * (k_param.DepthU / mfma_k - k - 1);
-				if (wait_cnt >= 16)wait_cnt = 15;
-				s_wait_lgkmcnt(wait_cnt);
-				for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-				{
-					for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-					{
-						uint32_t a_idx_offset = mfma_agpr_per_mfma * (m + k * mfma_pttn0_per_wv);
-						uint32_t b_idx_offset = mfma_bgpr_per_mfma * (n + k * mfma_pttn1_per_wv);
-						uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-						op4(mfma_inst,
-							(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-							(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-							(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-							(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-					}
-				}
-			}
-		}
-
-		// -----------------------------------------------------------------------
-		// gemm lds pang
-		s_wait_vmcnt(0);	op0("s_barrier");
-		{
-			for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					ds_read_dword(lds_rd_instr_dw_sz,
-						v_mfma_a_pang + (lds_rd_instr_dw_sz * (m + k * mfma_pttn0_per_wv)),
-						v_a_lds_read_pang,
-						a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-				}
-				for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-				{
-					ds_read_dword(lds_rd_instr_dw_sz,
-						v_mfma_b_pang + (lds_rd_instr_dw_sz * (n + k * mfma_pttn1_per_wv)),
-						v_b_lds_read_pang,
-						b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-				}
-			}
-
-			for (uint32_t k = 0; k < k_param.DepthU / mfma_k; k++)
-			{
-				uint32_t wait_cnt = (mfma_pttn0_per_wv + mfma_pttn1_per_wv) * (k_param.DepthU / mfma_k - k - 1);
-				if (wait_cnt >= 16)wait_cnt = 15;
-				s_wait_lgkmcnt(wait_cnt);
-				for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-				{
-					for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-					{
-						uint32_t a_idx_offset = mfma_agpr_per_mfma * (m + k * mfma_pttn0_per_wv);
-						uint32_t b_idx_offset = mfma_bgpr_per_mfma * (n + k * mfma_pttn1_per_wv);
-						uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-						op4(mfma_inst,
-							(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-							(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-							(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-							(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-					}
-				}
-			}
-		}
-
-		delVar(v_mfma_a_ping);
-		delVar(v_mfma_b_ping);
-		delVar(v_mfma_a_pang);
-		delVar(v_mfma_b_pang);
-	}
 	
-	void fetch_lds_ping()
+	int32_t fetch_glb_waitcnt = -1;
+	void fetch_glb_to_lds_ping()
 	{
-		//exec_mark1();
-
 		// lds A/B ping write
 		op2("s_mov_b32", "m0", s_a_lds_write_ping);
 		for (uint32_t i = 0; i < a_fetch_times; i++)
@@ -1203,7 +903,7 @@ private:
 			op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);
 		}
 	}
-	void fetch_lds_pang()
+	void fetch_glb_to_lds_pang()
 	{
 		// lds A/B ping write
 		op2("s_mov_b32", "m0", s_a_lds_write_pang);
@@ -1229,17 +929,17 @@ private:
 	}
 	void fetch_loop()
 	{
-		debug_sync();
-		uint32_t waitcnt = a_fetch_times + b_fetch_times;
-		//waitcnt = 0;
+		if (fetch_glb_waitcnt < 0)
+			fetch_glb_waitcnt = a_fetch_times + b_fetch_times;
+
 		// =======================================================================
 		// enter loop
 		// =======================================================================
-		fetch_lds_ping();
-		fetch_lds_pang();
+		fetch_glb_to_lds_ping();
+		fetch_glb_to_lds_pang();
 
-		s_wait_vmcnt(waitcnt);	op0("s_barrier"); // wait lds-ping ready
-		s_wait_vmcnt(0);		op0("s_barrier"); // wait lds-pang ready
+		s_wait_vmcnt(fetch_glb_waitcnt);	op0("s_barrier"); // wait lds-ping ready
+		s_wait_vmcnt(0);					op0("s_barrier"); // wait lds-pang ready
 
 		// =======================================================================
 		// loop
@@ -1253,11 +953,11 @@ private:
 		T_Var s_gemm_loop_cnt;
 		s_gemm_loop_cnt = f_s_loop(s_tmp1, "FETCH_LOOP");
 		{
-			fetch_lds_ping();
-			s_wait_vmcnt(waitcnt);	op0("s_barrier"); // wait lds-ping ready
+			fetch_glb_to_lds_ping();
+			s_wait_vmcnt(fetch_glb_waitcnt);	op0("s_barrier"); // wait lds-ping ready	
 
-			fetch_lds_pang();
-			s_wait_vmcnt(waitcnt);	op0("s_barrier"); // wait lds-pang ready
+			fetch_glb_to_lds_pang();
+			s_wait_vmcnt(fetch_glb_waitcnt);	op0("s_barrier"); // wait lds-pang ready
 		}
 		f_e_loop(s_gemm_loop_cnt, "FETCH_LOOP");
 		wrLaber(l_end_fetch_loop);
@@ -1266,99 +966,55 @@ private:
 		// exit loop
 		// =======================================================================
 		s_wait_vmcnt(0);
-		op0("s_barrier");
 	}
 
-	void mfma_enter_loop()
+	void read_lds_ping_to_mfma_ping(uint32_t k)
 	{
-		//exec_mark1();
-
-		uint32_t wait_cnt = mfma_pttn0_per_wv + mfma_pttn1_per_wv;
-		uint32_t bias = 0;
-
-		// read ping (do it in pre-loop)
 		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
 		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
 		}
 		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
 		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
 		}
-		// read pang
+	}
+	void read_lds_ping_to_mfma_pang(uint32_t k)
+	{
 		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
 		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * 1 + a_lds_read_step_2 * m);
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
 		}
 		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
 		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * 1 + b_lds_read_step_2 * n);
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
 		}
-
-		// loop
-		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
+	}
+	void read_lds_pang_to_mfma_ping(uint32_t k)
+	{
+		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
 		{
-			// wait ping n' math ping
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
-
-			// read ping
-			bias = 2 * (k + 1) + 0;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
-
-			// wait pang n' math pang
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
-
-			// read pang
-			bias = 2 * (k + 1) + 1;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
+		}
+		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
+		{
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
+		}
+	}
+	void read_lds_pang_to_mfma_pang(uint32_t k)
+	{
+		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
+		{
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
 		}
 
-		// wait ping n' math ping
-		s_wait_lgkmcnt(wait_cnt);
+		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
+		{
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
+		}
+	}
+	void mfma_mfma_ping()
+	{
 		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
 		{
 			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
@@ -1374,20 +1030,9 @@ private:
 					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
 			}
 		}
-
-		// wait pang
-		s_wait_lgkmcnt(0);
-		// read lds-pang to mfma-ping for next loop
-		op0("s_barrier");
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
-		}
-		// math pang
+	}
+	void mfma_mfma_pang()
+	{
 		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
 		{
 			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
@@ -1404,402 +1049,157 @@ private:
 			}
 		}
 	}
-	void mfma_lds_pang()
+
+	int32_t read_lds_waitcnt = -1;
+	void math_enter_loop()
 	{
-		//exec_mark2();
-
-		uint32_t wait_cnt = mfma_pttn0_per_wv + mfma_pttn1_per_wv;
-		uint32_t bias = 0;
-
 		// read ping (do it in pre-loop)
-		/*for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
-		}*/
+		read_lds_ping_to_mfma_ping(0);
 		// read pang
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * 1 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * 1 + b_lds_read_step_2 * n);
-		}
+		read_lds_ping_to_mfma_pang(1);
 
 		// loop
 		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
 		{
 			// wait ping n' math ping
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_ping();
 
 			// read ping
-			bias = 2 * (k + 1) + 0;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			read_lds_ping_to_mfma_ping(2 * (k + 1) + 0);
 
 			// wait pang n' math pang
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_pang();
 
 			// read pang
-			bias = 2 * (k + 1) + 1;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			read_lds_ping_to_mfma_pang(2 * (k + 1) + 1);
 		}
 
 		// wait ping n' math ping
-		s_wait_lgkmcnt(wait_cnt);
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
+		s_wait_lgkmcnt(read_lds_waitcnt);
+		mfma_mfma_ping();
 
-				op4(mfma_inst,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-					(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-					(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-			}
+		// wait pang
+		s_wait_lgkmcnt(0);
+		// read lds-pang to mfma-ping for next loop
+		op0("s_barrier");
+		read_lds_pang_to_mfma_ping(0);
+		// math pang
+		mfma_mfma_pang();
+	}
+	void math_lds_pang()
+	{
+		// read ping (do it in pre-loop)
+		//read_lds_pang_to_mfma_ping(0);
+		// read pang
+		read_lds_pang_to_mfma_pang(1);
+
+		// loop
+		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
+		{
+			// wait ping n' math ping
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_ping();
+
+			// read ping
+			read_lds_pang_to_mfma_ping(2 * (k + 1) + 0);
+
+			// wait pang n' math pang
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_pang();
+
+			// read pang
+			read_lds_pang_to_mfma_pang(2 * (k + 1) + 1);
 		}
+
+		// wait ping n' math ping
+		s_wait_lgkmcnt(read_lds_waitcnt);
+		mfma_mfma_ping();
 
 		// wait pang
 		s_wait_lgkmcnt(0);
 		// read lds-ping to mfma-ping for next loop
 		op0("s_barrier");
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
-		}
+		read_lds_ping_to_mfma_ping(0);
 		// math pang
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-				op4(mfma_inst,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-					(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-					(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-			}
-		}
+		mfma_mfma_pang();
 	}
-	void mfma_lds_ping()
+	void math_lds_ping()
 	{
-		//exec_mark1();
-
-		uint32_t wait_cnt = mfma_pttn0_per_wv + mfma_pttn1_per_wv;
-		uint32_t bias = 0;
-
 		// read ping (do it in pre-loop)
-		/*for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
-		}*/
+		// read_lds_ping_to_mfma_ping(0);
 		// read pang
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * 1 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * 1 + b_lds_read_step_2 * n);
-		}
+		read_lds_ping_to_mfma_pang(1);
 
 		// loop
 		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
 		{
 			// wait ping n' math ping
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_ping();
 
 			// read ping
-			bias = 2 * (k + 1) + 0;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			read_lds_ping_to_mfma_ping(2 * (k + 1) + 0);
 
 			// wait pang n' math pang
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_pang();
 
 			// read pang
-			bias = 2 * (k + 1) + 1;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			read_lds_ping_to_mfma_pang(2 * (k + 1) + 1);
 		}
 
 		// wait ping n' math ping
-		s_wait_lgkmcnt(wait_cnt);
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-				op4(mfma_inst,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-					(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-					(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-			}
-		}
+		s_wait_lgkmcnt(read_lds_waitcnt);
+		mfma_mfma_ping();
 
 		// wait pang
 		s_wait_lgkmcnt(0);
 		// read lds-pang to mfma-ping for next loop
 		op0("s_barrier");
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
-		}
+		read_lds_pang_to_mfma_ping(0);
 		// math pang
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-				op4(mfma_inst,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-					(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-					(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-			}
-		}
+		mfma_mfma_pang();
 	}
-	void mfma_exit_loop()
+	void math_exit_loop()
 	{
-		//exec_mark2();
-
-		uint32_t wait_cnt = mfma_pttn0_per_wv + mfma_pttn1_per_wv;
-		uint32_t bias = 0;
-
 		// read ping (do it in pre-loop)
-		/*for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * 0 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * 0 + b_lds_read_step_2 * n);
-		}*/
+		//read_lds_pang_to_mfma_ping(0);
 		// read pang
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * 1 + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * 1 + b_lds_read_step_2 * n);
-		}
+		read_lds_pang_to_mfma_pang(1);
 
 		// loop
 		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
 		{
 			// wait ping n' math ping
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_ping();
 
 			// read ping
-			bias = 2 * (k + 1) + 0;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			read_lds_pang_to_mfma_ping(2 * (k + 1) + 0);
 
 			// wait pang n' math pang
-			s_wait_lgkmcnt(wait_cnt);
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-				{
-					uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-					uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-					uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-					op4(mfma_inst,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-						(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-						(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-						(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-				}
-			}
+			s_wait_lgkmcnt(read_lds_waitcnt);
+			mfma_mfma_pang();
 
 			// read pang
-			bias = 2 * (k + 1) + 1;
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * bias + a_lds_read_step_2 * m);
-			}
-			for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-			{
-				ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * bias + b_lds_read_step_2 * n);
-			}
+			read_lds_pang_to_mfma_pang(2 * (k + 1) + 1);
 		}
 
 		// wait ping n' math ping
-		s_wait_lgkmcnt(wait_cnt);
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-				op4(mfma_inst,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-					(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
-					(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-			}
-		}
+		s_wait_lgkmcnt(read_lds_waitcnt);
+		mfma_mfma_ping();
 
 		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-			{
-				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
-				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
-				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
-
-				op4(mfma_inst,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
-					(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
-					(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
-					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
-			}
-		}
+		mfma_mfma_pang();
 	}
-	void mfma_loop()
+	void math_loop()
 	{
+		if (read_lds_waitcnt < 0)
+			read_lds_waitcnt = mfma_pttn0_per_wv + mfma_pttn1_per_wv;
+
 		v_mfma_a_ping = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
 		v_mfma_b_ping = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
 		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
@@ -1812,7 +1212,6 @@ private:
 		for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
 			op2("v_accvgpr_write", acc_mfma_d + i, 0);
 
-		debug_sync();
 		// =======================================================================
 		// loop
 		// =======================================================================
@@ -1821,22 +1220,22 @@ private:
 		op2("s_cmp_le_u32", s_tmp1, 1); // if(loop_cnt <= 1) scc = 1;
 		op1("s_cbranch_scc1", l_end_math_loop);// if(scc == 1) no loop;
 		op3("s_sub_u32", s_tmp1, s_tmp1, 1);// sub enter and exit loop
-		op1("s_setprio", 1);
+		//op1("s_setprio", 1);
 
-		// gemm lds ping
+		// gemm lds ping		
 		op0("s_barrier");
-		mfma_enter_loop();
+		math_enter_loop();
 
 		T_Var s_gemm_loop_cnt;
 		s_gemm_loop_cnt = f_s_loop(s_tmp1, "MATH_LOOP");
 		{
 			// gemm lds pang
 			//op0("s_barrier");
-			mfma_lds_pang();
+			math_lds_pang();
 
 			// gemm lds ping
 			//op0("s_barrier");
-			mfma_lds_ping();
+			math_lds_ping();
 		}
 		f_e_loop(s_gemm_loop_cnt, "MATH_LOOP");
 		wrLaber(l_end_math_loop);
@@ -1847,7 +1246,7 @@ private:
 		// =======================================================================
 		// gemm lds pang
 		//op0("s_barrier");
-		mfma_exit_loop();
+		math_exit_loop();
 	}
 
 	void store_result()
@@ -1860,44 +1259,50 @@ private:
 			{
 				uint32_t mfma_d_idx = (m + n * mfma_pttn0_per_wv) * mfma_dgpr_per_mfma;
 
-				if (en_mfma)
+				for (uint32_t i = 0; i < mfma_dgpr_per_mfma; i++)
 				{
-					for (uint32_t i = 0; i < mfma_dgpr_per_mfma; i++)
-					{
-						op2("v_accvgpr_read", v_rslt_d + i, (acc_mfma_d + (mfma_d_idx + i)) ^ 1);
-						op2("v_cvt_f16_f32", v_rslt_d + i, v_rslt_d + i); 
-					}
-					for (uint32_t i = 0; i < 8; i++)
-					{
-						op3("v_pack_b32_f16", v_rslt_d + i, v_rslt_d + (2 * i + 0), v_rslt_d + (2 * i + 1));
-					}
-				}
-				else
-				{
-					for (uint32_t i = 0; i < mfma_dgpr_per_mfma; i++)
-					{
-						op2("v_cvt_f16_u16", acc_mfma_d + i, i);
-					}
-					for (uint32_t i = 0; i < 8; i++)
-					{
-						op3("v_pack_b32_f16", v_rslt_d + i, acc_mfma_d + (2 * i + 0), acc_mfma_d + (2 * i + 1));
-					}
-				}
+					op2("v_accvgpr_read", v_rslt_d + i, (acc_mfma_d + (mfma_d_idx + i)) ^ 1);
 
-				for (uint32_t i = 0; i < 4; i++)
-				{
-					uint32_t dgpr_idx_offset = (mfma_t / elem_sz) * i;
-					uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * i;
+					if (k_param.dataType == E_DataType::Fp32) // fp32
+					{
+						op1("s_nop", 4);
+						if ((i + 1) % 4 == 0)
+						{
+							uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * (i / 4);
 
-					buffer_store_dword(glb_store_instr_dw_sz,
-						v_rslt_d + 2 * i,
-						v_d_store_offset + n,
-						s_d_dscp, 0, false, true,
-						instr_offset);
+							buffer_store_dword(glb_store_instr_dw_sz,
+								v_rslt_d + 4 * (i / 4),
+								v_d_store_offset + n,
+								s_d_dscp, 0, false, true,
+								instr_offset);
+						}
+					}
+					else if (k_param.dataType == E_DataType::Fp16) // fp16
+					{
+						op2("v_cvt_f16_f32", v_rslt_d + i, v_rslt_d + i);
+						if ((i + 1) % 2 == 0)
+						{
+							op3("v_pack_b32_f16", v_rslt_d + (i / 2), v_rslt_d + (i - 1), v_rslt_d + i);
+						}
+						if ((i + 1) % 4 == 0)
+						{
+							uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * (i / 4);
+
+							buffer_store_dword(glb_store_instr_dw_sz,
+								v_rslt_d + 2 * (i / 4),
+								v_d_store_offset + n,
+								s_d_dscp, 0, false, true,
+								instr_offset);
+						}
+					}
+					else if (k_param.dataType == E_DataType::Bf16) // bf16
+					{
+					}
 				}
 			}
 		}
 	}
+
 	void free_gprs()
 	{
 		delVar(s_a_dscp);
@@ -1926,63 +1331,6 @@ private:
 		delVar(v_tid_in_wave);
 		delVar(v_wvid_in_grp);
 		delVar(s_wvid_in_grp);
-	}
-	void debug_sync()
-	{
-		s_wait_cnt0();
-		op0("s_barrier");
-		exec_mark3();
-		op1("s_nop", 32);
-		exec_mark4();
-		op0("s_barrier");
-	}
-	void exec_mark1()
-	{
-		T_Var s_mark = newSgpr("s_mark");
-		op2("s_mov_b32", s_mark, 0);
-		op2("s_mov_b32", s_mark, 0);
-		op3("s_add_u32", s_mark, s_mark, 1);
-		op3("s_add_u32", s_mark, s_mark, 1);
-		delVar(s_mark);
-	}
-	void exec_mark2()
-	{
-		T_Var v_mark = newVgpr("v_mark");
-		op2("v_mov_b32", v_mark, 0);
-		op2("v_mov_b32", v_mark, 0);
-		op3("v_add_u32", v_mark, v_mark, 1);
-		op3("v_add_u32", v_mark, v_mark, 1);
-		delVar(v_mark);
-	}
-	void exec_mark3()
-	{
-		T_Var s_mark = newSgpr("s_mark");
-		T_Var v_mark = newVgpr("v_mark");
-		op2("s_mov_b32", s_mark, 0);
-		op2("s_mov_b32", s_mark, 0);
-		op3("s_add_u32", s_mark, s_mark, 1);
-		op3("s_add_u32", s_mark, s_mark, 1);
-		op2("v_mov_b32", v_mark, 0);
-		op2("v_mov_b32", v_mark, 0);
-		op3("v_add_u32", v_mark, v_mark, 1);
-		op3("v_add_u32", v_mark, v_mark, 1);
-		delVar(s_mark);
-		delVar(v_mark);
-	}
-	void exec_mark4()
-	{
-		T_Var s_mark = newSgpr("s_mark");
-		T_Var v_mark = newVgpr("v_mark");
-		op2("s_mov_b32", s_mark, 0);
-		op2("v_mov_b32", v_mark, 0);
-		op2("s_mov_b32", s_mark, 0);
-		op2("v_mov_b32", v_mark, 0);
-		op3("s_add_u32", s_mark, s_mark, 1);
-		op3("v_add_u32", v_mark, v_mark, 1);
-		op3("s_add_u32", s_mark, s_mark, 1);
-		op3("v_add_u32", v_mark, v_mark, 1);
-		delVar(s_mark);
-		delVar(v_mark);
 	}
 };
 

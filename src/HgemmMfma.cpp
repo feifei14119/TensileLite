@@ -21,14 +21,13 @@ C:	______M_______
 */
 
 static unsigned int g_debugDataNum = 1;
-static bool g_EnTensileLayout = false;
 static bool g_passCpu = false;
 
 static uint32_t g_DataType = 2; // 1=fp32; 2=fp16; 3=bf16
 static unsigned int M, N, K;
 static unsigned int Padding, StrideA0, StrideB0, StrideD0;
 static DataMem<float> * g_DataA, *g_DataB, *g_DataD, *g_DataRef;
-static DataMem<float> * g_hDataA, *g_hDataB, *g_hDataD, *g_hDataRef;
+static DataMem<float> * g_hfDataA, *g_hfDataB, *g_hfDataD, *g_hfDataRef;
 static DataMem<float> * g_dbg_buff, *g_dbg_h2f_buff;
 
 static inline unsigned int f32_as_u32(float f) { union { float f; unsigned int u; } v; v.f = f; return v.u; }
@@ -72,34 +71,43 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	SolutionCtrlBase::generateKernel();
 
 	CmdArgs * ca = CmdArgs::GetCmdArgs();
-	uint32_t wave_method = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WV);
+
+	uint32_t wave_method = 2;
+	uint32_t g_DataType = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TYPE);
 	uint32_t mfma_pttn0 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MT0);
 	uint32_t mfma_pttn1 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MT1);
+	uint32_t wave_pttn0 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WT0);
+	uint32_t wave_pttn1 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WT1);
 	uint32_t depth_u = *(uint32_t*)ca->GetOneArg(GEMM_ARG_DU);
-	g_EnTensileLayout = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TENSILE);
+	uint32_t enTensileLayout = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TENSILE);
 
 	wave_method = 2;
+	g_DataType = 2;
 	mfma_pttn0 = 2;
 	mfma_pttn1 = 2;
-	depth_u = 32;
+	wave_pttn0 = 2;
+	wave_pttn1 = 2;
+	depth_u = 16;
+	enTensileLayout = 0;
 
 	// get kernel parameters
-	kernelParam.gemmType = g_DataType;
+	if (g_DataType == 1)kernelParam.dataType = E_DataType::Fp32;
+	if (g_DataType == 2)kernelParam.dataType = E_DataType::Fp16;
+	if (g_DataType == 3)kernelParam.dataType = E_DataType::Bf16;
 	kernelParam.waveMethod = wave_method;
-	kernelParam.enTensileLayout = g_EnTensileLayout;
+	kernelParam.enTensileLayout = enTensileLayout;
 	kernelParam.M = M; kernelParam.N = N; kernelParam.K = K;
-	kernelParam.wave_num_per_simd = 1;
 	kernelParam.mfma_pttn_per_wave[0] = mfma_pttn0;
 	kernelParam.mfma_pttn_per_wave[1] = mfma_pttn1;
-	kernelParam.wave_pttn_per_group[0] = 2; 
-	kernelParam.wave_pttn_per_group[1] = 2;
+	kernelParam.wave_pttn_per_group[0] = wave_pttn0;
+	kernelParam.wave_pttn_per_group[1] = wave_pttn1;
 	kernelParam.DepthU = depth_u;
 	kernelParam.dbgNum = g_debugDataNum;
 
 	// generate kernel source
 	kernelWriter = new GemmMfmaKernelWriter(kernelParam);
 
-	if (g_EnTensileLayout == false)
+	if (enTensileLayout == false)
 	{
 		kernelWriter->SetArg("A", sizeof(float*), E_ArgKind::Global, true);
 		kernelWriter->SetArg("B", sizeof(float*), E_ArgKind::Global, true);
@@ -136,7 +144,7 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	}
 	else if (g_DataType == 2)
 	{
-		setParam(k, g_hDataA, g_hDataB, g_hDataD, g_dbg_buff, M, N, K, StrideA0, StrideB0, StrideD0);
+		setParam(k, g_hfDataA, g_hfDataB, g_hfDataD, g_dbg_buff, M, N, K, StrideA0, StrideB0, StrideD0);
 	}
 
 	repeatTimes = 1;
@@ -152,9 +160,9 @@ E_ReturnState GemmMfmaAsmSolution::verifyResult()
 		float *pf32;
 		short *pf16;
 
-		g_hDataD->Sync2Hst();
+		g_hfDataD->Sync2Hst();
 		pf32 = (float*)g_DataD->HstAddr();
-		pf16 = (short*)g_hDataD->HstAddr();
+		pf16 = (short*)g_hfDataD->HstAddr();
 		for (uint32_t i = 0; i < StrideD0*N; i++)
 			pf32[i] = cvtF16toF32(pf16[i]);
 		g_DataD->SetMemType(E_MemType::Page);
@@ -255,11 +263,11 @@ void GemmMfmaProblem::initDataMem()
 	g_DataRef = newRealData<float>("matrix-ref", -55.55, StrideD0, N);
 	g_DataRef->SetMemType(E_MemType::Page);
 
-	g_hDataA = newRealData<float>("matrix-a", 0, StrideA0/2, M);
-	g_hDataB = newRealData<float>("matrix-b", 0, StrideB0/2, N);
-	g_hDataD = newRealData<float>("matrix-d", 0, StrideD0/2, N);
-	g_hDataRef = newRealData<float>("matrix-ref", -55.55f, StrideD0, N);
-	g_hDataRef->SetMemType(E_MemType::Page);
+	g_hfDataA = newRealData<float>("matrix-a", 0, StrideA0/2, M);
+	g_hfDataB = newRealData<float>("matrix-b", 0, StrideB0/2, N);
+	g_hfDataD = newRealData<float>("matrix-d", 0, StrideD0/2, N);
+	g_hfDataRef = newRealData<float>("matrix-ref", -55.55f, StrideD0, N);
+	g_hfDataRef->SetMemType(E_MemType::Page);
 	g_dbg_h2f_buff = newRealData<float>("debug-fp16", 55.55f, lds_sz);
 
 	if (g_passCpu)
@@ -271,20 +279,20 @@ void GemmMfmaProblem::initDataMem()
 		short *pf16;
 
 		pf32 = (float*)g_DataA->HstAddr();
-		pf16 = (short*)g_hDataA->HstAddr();
+		pf16 = (short*)g_hfDataA->HstAddr();
 		for (uint32_t i = 0; i < StrideA0*M; i++)
 			pf16[i] = cvtF32toF16(pf32[i]);
-		g_hDataA->SetMemType(E_MemType::Page);
-		g_hDataA->Sync2Dev();
-		g_hDataA->SetMemType(E_MemType::Dev);
+		g_hfDataA->SetMemType(E_MemType::Page);
+		g_hfDataA->Sync2Dev();
+		g_hfDataA->SetMemType(E_MemType::Dev);
 
 		pf32 = (float*)g_DataB->HstAddr();
-		pf16 = (short*)g_hDataB->HstAddr();
+		pf16 = (short*)g_hfDataB->HstAddr();
 		for (uint32_t i = 0; i < StrideB0*N; i++)
 			pf16[i] = cvtF32toF16(pf32[i]);
-		g_hDataB->SetMemType(E_MemType::Page);
-		g_hDataB->Sync2Dev();
-		g_hDataB->SetMemType(E_MemType::Dev);
+		g_hfDataB->SetMemType(E_MemType::Page);
+		g_hfDataB->Sync2Dev();
+		g_hfDataB->SetMemType(E_MemType::Dev);
 	}
 }
 void GemmMfmaProblem::cpuCompute()
@@ -320,12 +328,12 @@ void GemmMfmaProblem::cpuCompute()
 		float *pf32;
 		short *pf16;
 		pf32 = (float*)g_DataRef->HstAddr();
-		pf16 = (short*)g_hDataRef->HstAddr();
+		pf16 = (short*)g_hfDataRef->HstAddr();
 		for (uint32_t i = 0; i < StrideD0*N; i++)
 			pf16[i] = cvtF32toF16(pf32[i]);
-		g_hDataRef->SetMemType(E_MemType::Page);
-		g_hDataRef->Sync2Dev();
-		g_hDataRef->SetMemType(E_MemType::Dev);
+		g_hfDataRef->SetMemType(E_MemType::Page);
+		g_hfDataRef->Sync2Dev();
+		g_hfDataRef->SetMemType(E_MemType::Dev);
 	}
 }
 
