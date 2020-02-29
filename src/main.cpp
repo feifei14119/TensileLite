@@ -1,6 +1,6 @@
 ﻿#include "../inc/ff_utils.h"
 #include "../inc/ff_gpu.h"
-#include "HgemmMfma.h"
+#include "gemmMfma.h"
 
 using namespace feifei;
 

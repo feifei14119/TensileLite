@@ -2,7 +2,7 @@
 
 #include "../inc/ff_utils.h"
 #include "../inc/ff_gpu.h"
-#include "HgemmMfmaKernelWriter.h"
+#include "gemmMfmaKernelWriter.h"
 
 using namespace feifei;
 

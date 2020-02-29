@@ -69,6 +69,9 @@ protected:
 	bool en_mfma;
 	uint32_t elem_sz; // 每个元素多少BYTE
 	uint32_t lds_pad_byte = 8; // LDS每行pad字节数
+	const uint32_t lds_buffer_num = 3;
+	int32_t fetch_glb_waitcnt = -1;
+	int32_t read_lds_waitcnt = -1;
 
 	bool en_dirct_glb_to_lds = true;
 	uint32_t glb_load_instr_dw_sz; // global load size(DWORD)
@@ -96,8 +99,6 @@ protected:
 	T_Var v_tid_in_wave;
 	T_Var v_wvid_in_grp;
 	T_Var s_wvid_in_grp;
-	T_Var v_sem_addr;
-	T_Var v_sem_data;
 
 	// -----------------------------------------------------------------------
 	// config
@@ -118,10 +119,16 @@ protected:
 	// -----------------------------------------------------------------------
 	T_Var s_a_dscp;
 	T_Var v_a_fetch_offset;
-	T_Var s_a_lds_write_ping;
-	T_Var s_a_lds_write_pang;
-	T_Var v_a_lds_read_ping;
-	T_Var v_a_lds_read_pang;
+	T_Var v_a_fetch_offset_ping;
+	T_Var v_a_fetch_offset_pang;
+	T_Var s_a_lds_write;
+	T_Var s_a_lds_write_0;
+	T_Var s_a_lds_write_1;
+	T_Var s_a_lds_write_2;
+	T_Var v_a_lds_read;
+	T_Var v_a_lds_read_0;
+	T_Var v_a_lds_read_1;
+	T_Var v_a_lds_read_2;
 	uint32_t a_fetch_ele_num0_per_wv;	// global->lds:每个wave每次读取的宽度.单位为元素
 	uint32_t a_fetch_ele_num1_per_wv;	// global->lds:每个wave每次读取的高度.单位为元素
 	uint32_t a_fetch_wave_shape0;		// global->lds:每个wave的宽度.宽度单位为thread
@@ -138,10 +145,16 @@ protected:
 	// -----------------------------------------------------------------------
 	T_Var s_b_dscp;
 	T_Var v_b_fetch_offset;
-	T_Var s_b_lds_write_ping;
-	T_Var s_b_lds_write_pang;
-	T_Var v_b_lds_read_ping;
-	T_Var v_b_lds_read_pang;
+	T_Var v_b_fetch_offset_ping;
+	T_Var v_b_fetch_offset_pang;
+	T_Var s_b_lds_write;
+	T_Var s_b_lds_write_0;
+	T_Var s_b_lds_write_1;
+	T_Var s_b_lds_write_2;
+	T_Var v_b_lds_read;
+	T_Var v_b_lds_read_0;
+	T_Var v_b_lds_read_1;
+	T_Var v_b_lds_read_2;
 	uint32_t b_lds_read_step_1;
 	uint32_t b_lds_read_step_2;
 	uint32_t b_fetch_ele_num0_per_wv;
@@ -181,6 +194,8 @@ protected:
 	uint32_t d_glb_step1;
 	uint32_t d_glb_step2;
 	uint32_t mfma_dgpr_tt_sz;
+
+	T_Var lds_buffer_cnt;
 #pragma endregion
 
 	uint32_t k_arg_pA;
@@ -457,8 +472,6 @@ private:
 	}
 	void write_double_wave_program()
 	{
-		v_sem_addr = newVgpr("sem_addr", 1, 1);
-		v_sem_data = newVgpr("sem_data", 1, 1);
 		// =======================================================================
 		// get hardware wave id
 		// =======================================================================
@@ -526,14 +539,15 @@ private:
 	{
 		fetch_loop();
 		op0("s_endpgm");
+		free_fetch_gprs();
 	}
 	void write_math_wave_program()
 	{
 		address_d_n();
 		math_loop();
 		op1("s_nop", 32);
-		op1("s_nop", 32);
 		store_result();
+		free_math_gprs();
 	}
 
 	// =======================================================================
@@ -602,14 +616,17 @@ private:
 		// A: lds write address 
 		// =======================================================================
 		{
-			ldsAllocByte(a_lds_sz_per_grp * 2); // *2 for ping-pang buffer		
+			ldsAllocByte(a_lds_sz_per_grp * lds_buffer_num); // *2 for ping-pang buffer		
 
 			// ping pang buffer adderss (byte)
-			s_a_lds_write_ping = newSgpr("a_lds_addr_ping");
-			s_a_lds_write_pang = newSgpr("a_lds_addr_pang");
+			s_a_lds_write = newSgpr("a_lds_write");
+			s_a_lds_write_0 = newSgpr("a_lds_addr_ping");
+			s_a_lds_write_1 = newSgpr("a_lds_addr_pang");
+			s_a_lds_write_2 = newSgpr("a_lds_addr_pang");
 			op2("s_mov_b32", s_tmp1, a_lds_sz_per_wv);
-			op3("s_mul_i32", s_a_lds_write_ping, s_wvid_in_grp, s_tmp1); // lds_ping_addr = wave_id * a_lds_size_per_wave
-			op3("s_add_i32", s_a_lds_write_pang, s_a_lds_write_ping, a_lds_sz_per_grp); // lds_pang_addr = lds_ping_addr + lds_a_size_per_group
+			op3("s_mul_i32", s_a_lds_write_0, s_wvid_in_grp, s_tmp1); // lds_ping_addr = wave_id * a_lds_size_per_wave
+			op3("s_add_i32", s_a_lds_write_1, s_a_lds_write_0, a_lds_sz_per_grp); // lds_pang_addr = lds_ping_addr + lds_a_size_per_group
+			op3("s_add_i32", s_a_lds_write_2, s_a_lds_write_1, a_lds_sz_per_grp);
 		}
 
 		// =======================================================================
@@ -651,11 +668,14 @@ private:
 			op3("v_mul_lo_u32", v_a_lds_pad_offset, lds_pad_byte, v_tmp1);
 
 			// ---------------------------------------------------------------------
-			v_a_lds_read_ping = newVgpr("a_lds_offset");
-			v_a_lds_read_pang = newVgpr("a_lds_offset");
-			op3("v_add_u32", v_a_lds_read_ping, v_a_row_base_addr, v_a_col_offset_addr);
-			op3("v_add_u32", v_a_lds_read_ping, v_a_lds_read_ping, v_a_lds_pad_offset);
-			op3("v_add_u32", v_a_lds_read_pang, a_lds_sz_per_grp, v_a_lds_read_ping);
+			v_a_lds_read = newVgpr("a_lds_offset");
+			v_a_lds_read_0 = newVgpr("a_lds_offset");
+			v_a_lds_read_1 = newVgpr("a_lds_offset");
+			v_a_lds_read_2 = newVgpr("a_lds_offset");
+			op3("v_add_u32", v_a_lds_read_0, v_a_row_base_addr, v_a_col_offset_addr);
+			op3("v_add_u32", v_a_lds_read_0, v_a_lds_read_0, v_a_lds_pad_offset);
+			op3("v_add_u32", v_a_lds_read_1, a_lds_sz_per_grp, v_a_lds_read_0);
+			op3("v_add_u32", v_a_lds_read_2, a_lds_sz_per_grp, v_a_lds_read_1);
 
 			//f_debug_data(s_args[3], v_a_col_offset_addr, true);
 			delVar(v_a_wv_row_id_in_wvpttn);
@@ -731,16 +751,19 @@ private:
 		// B: lds write address 
 		// =======================================================================
 		{
-			ldsAllocByte(b_lds_sz_per_grp * 2);
+			ldsAllocByte(b_lds_sz_per_grp * lds_buffer_num);
 
 			// ping pang buffer adderss (byte)
-			s_b_lds_write_ping = newSgpr("b_lds_addr_ping");
-			s_b_lds_write_pang = newSgpr("b_lds_addr_pang");
+			s_b_lds_write = newSgpr("b_lds_addr_ping");
+			s_b_lds_write_0 = newSgpr("b_lds_addr_ping");
+			s_b_lds_write_1 = newSgpr("b_lds_addr_pang");
+			s_b_lds_write_2 = newSgpr("b_lds_addr_pang");
 			op2("s_mov_b32", s_tmp1, b_lds_sz_per_wv);
-			op3("s_mul_i32", s_b_lds_write_ping, s_wvid_in_grp, s_tmp1);
-			op2("s_mov_b32", s_tmp1, a_lds_sz_per_grp * 2);
-			op3("s_add_u32", s_b_lds_write_ping, s_b_lds_write_ping, s_tmp1); // lds_ping_addr += a_lds_size * 2; *2 for ping-pang buffer
-			op3("s_add_i32", s_b_lds_write_pang, s_b_lds_write_ping, b_lds_sz_per_grp);
+			op3("s_mul_i32", s_b_lds_write_0, s_wvid_in_grp, s_tmp1);
+			op2("s_mov_b32", s_tmp1, a_lds_sz_per_grp * lds_buffer_num);
+			op3("s_add_u32", s_b_lds_write_0, s_b_lds_write_0, s_tmp1); // lds_ping_addr += a_lds_size * 2; *2 for ping-pang buffer
+			op3("s_add_i32", s_b_lds_write_1, s_b_lds_write_0, b_lds_sz_per_grp);
+			op3("s_add_i32", s_b_lds_write_2, s_b_lds_write_1, b_lds_sz_per_grp);
 		}
 
 		// =======================================================================
@@ -775,13 +798,16 @@ private:
 			op3("v_mul_lo_u32", v_b_lds_pad_offset, lds_pad_byte, v_tmp1);
 
 			// ---------------------------------------------------------------------
-			v_b_lds_read_ping = newVgpr("a_lds_offset");
-			v_b_lds_read_pang = newVgpr("a_lds_offset");
-			op3("v_add_u32", v_b_lds_read_ping, v_b_row_base_addr, v_b_col_offset_addr);
-			op2h("v_mov_b32", v_tmp1, a_lds_sz_per_grp * 2); // *2 is for ping pang buffer A			
-			op3("v_add_u32", v_b_lds_read_ping, v_b_lds_read_ping, v_tmp1);
-			op3("v_add_u32", v_b_lds_read_ping, v_b_lds_read_ping, v_b_lds_pad_offset);
-			op3("v_add_u32", v_b_lds_read_pang, b_lds_sz_per_grp, v_b_lds_read_ping);
+			v_b_lds_read = newVgpr("a_lds_offset");
+			v_b_lds_read_0 = newVgpr("a_lds_offset");
+			v_b_lds_read_1 = newVgpr("a_lds_offset");
+			v_b_lds_read_2 = newVgpr("a_lds_offset");
+			op3("v_add_u32", v_b_lds_read_0, v_b_row_base_addr, v_b_col_offset_addr);
+			op2h("v_mov_b32", v_tmp1, a_lds_sz_per_grp * lds_buffer_num); // *2 is for ping pang buffer A			
+			op3("v_add_u32", v_b_lds_read_0, v_b_lds_read_0, v_tmp1);
+			op3("v_add_u32", v_b_lds_read_0, v_b_lds_read_0, v_b_lds_pad_offset);
+			op3("v_add_u32", v_b_lds_read_1, b_lds_sz_per_grp, v_b_lds_read_0);
+			op3("v_add_u32", v_b_lds_read_2, b_lds_sz_per_grp, v_b_lds_read_1);
 
 			delVar(v_b_wv_col_id_in_wvpttn);
 			delVar(v_b_wv_row_id_in_grp);
@@ -877,141 +903,106 @@ private:
 			delVar(v_d_glb_step3);
 		}
 	}
-	
-	int32_t fetch_glb_waitcnt = -1;
-	void fetch_glb_to_lds_ping()
-	{
-		// lds A/B ping write
-		op2("s_mov_b32", "m0", s_a_lds_write_ping);
-		for (uint32_t i = 0; i < a_fetch_times; i++)
-		{
-			buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
-		}
-		op2("s_mov_b32", "m0", s_b_lds_write_ping);
-		for (uint32_t i = 0; i < b_fetch_times; i++)
-		{
-			buffer_load_dword(1, v_tmp2, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
-		}
 
-		// move to next A/B addr 
-		for (uint32_t i = 0; i < a_fetch_times; i++)
-		{
-			op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);
-		}
-		for (uint32_t i = 0; i < b_fetch_times; i++)
-		{
-			op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);
-		}
-	}
-	void fetch_glb_to_lds_pang()
+	void switch_lds_write()
 	{
-		// lds A/B ping write
-		op2("s_mov_b32", "m0", s_a_lds_write_pang);
+		static uint32_t lab_cnt;
+		T_Var l_sem1 = newLaber(std::string("LDS_WR_SWITCH_1") + std::to_string(lab_cnt));
+		T_Var l_sem2 = newLaber(std::string("LDS_WR_SWITCH_2") + std::to_string(lab_cnt));
+		T_Var l_sem_e = newLaber(std::string("LDS_WR_SWITCH_3") + std::to_string(lab_cnt));
+
+		op2("s_cmp_eq_i32", lds_buffer_cnt, 1);
+		op1("s_cbranch_scc1", l_sem1);
+		op2("s_cmp_eq_i32", lds_buffer_cnt, 2);
+		op1("s_cbranch_scc1", l_sem2);
+
+		op2("s_mov_b32", lds_buffer_cnt, 1);
+		op2("s_mov_b32", s_a_lds_write, s_a_lds_write_1);
+		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_1);
+		op1("s_branch", l_sem_e);
+
+		wrLaber(l_sem1);
+		op2("s_cmp_eq_i32", lds_buffer_cnt, 1);
+		op2("s_cmov_b32", lds_buffer_cnt, 2);
+		op2("s_cmov_b32", s_a_lds_write, s_a_lds_write_2);
+		op2("s_cmov_b32", s_b_lds_write, s_b_lds_write_2);
+		op1("s_cbranch_scc1", l_sem_e);
+
+		wrLaber(l_sem2);
+		op2("s_mov_b32", lds_buffer_cnt, 0);
+		op2("s_mov_b32", s_a_lds_write, s_a_lds_write_0);
+		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_0);
+
+		wrLaber(l_sem_e);
+		lab_cnt++;
+	}
+	void move_to_next_glb_fetch()
+	{
 		for (uint32_t i = 0; i < a_fetch_times; i++)
-		{
-			buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
-		}
-		op2("s_mov_b32", "m0", s_b_lds_write_pang);
+			op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);
 		for (uint32_t i = 0; i < b_fetch_times; i++)
-		{
+			op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);
+	}
+	void fetch_glb_to_lds_enter_loop()
+	{
+		op2("s_mov_b32", "m0", s_a_lds_write);
+		for (uint32_t i = 0; i < a_fetch_times; i++)
+			buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
+
+		op2("s_mov_b32", "m0", s_b_lds_write);
+		for (uint32_t i = 0; i < b_fetch_times; i++)
 			buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
-		}
 
-		// move to next A/B addr 
+		move_to_next_glb_fetch();
+		switch_lds_write();
+	}
+	void fetch_glb_to_lds_loop()
+	{
+		op2("s_mov_b32", "m0", s_a_lds_write);
 		for (uint32_t i = 0; i < a_fetch_times; i++)
-		{
-			op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);
-		}
+			buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
+
+		op2("s_mov_b32", "m0", s_b_lds_write);
 		for (uint32_t i = 0; i < b_fetch_times; i++)
-		{
-			op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);
-		}
+			buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
+
+		s_wait_vmcnt(fetch_glb_waitcnt); op0("s_barrier"); // fetch 1 ready
+		move_to_next_glb_fetch();
+		switch_lds_write();
 	}
-	void fetch_loop()
+
+	void switch_lds_read()
 	{
-		if (fetch_glb_waitcnt < 0)
-			fetch_glb_waitcnt = a_fetch_times + b_fetch_times;
-
-		// =======================================================================
-		// enter loop
-		// =======================================================================
-		fetch_glb_to_lds_ping();
-		fetch_glb_to_lds_pang();
-
-		s_wait_vmcnt(fetch_glb_waitcnt);	op0("s_barrier"); // wait lds-ping ready
-		s_wait_vmcnt(0);					op0("s_barrier"); // wait lds-pang ready
-
-		// =======================================================================
-		// loop
-		// =======================================================================
-		T_Var l_end_fetch_loop = newLaber("END_FETCH_LOOP");
-		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU * 2)); // *2 for ping pang unroll		
-		op2("s_cmp_le_u32", s_tmp1, 1); // if(loop_cnt <= 1) scc = 1;
-		op1("s_cbranch_scc1", l_end_fetch_loop);// if(scc == 1) no loop;
-		op3("s_sub_u32", s_tmp1, s_tmp1, 1);// sub enter and exit loop
-
-		T_Var s_gemm_loop_cnt;
-		s_gemm_loop_cnt = f_s_loop(s_tmp1, "FETCH_LOOP");
-		{
-			fetch_glb_to_lds_ping();
-			s_wait_vmcnt(fetch_glb_waitcnt);	op0("s_barrier"); // wait lds-ping ready	
-
-			fetch_glb_to_lds_pang();
-			s_wait_vmcnt(fetch_glb_waitcnt);	op0("s_barrier"); // wait lds-pang ready
-		}
-		f_e_loop(s_gemm_loop_cnt, "FETCH_LOOP");
-		wrLaber(l_end_fetch_loop);
-
-		// =======================================================================
-		// exit loop
-		// =======================================================================
-		s_wait_vmcnt(0);
+		static uint32_t lab_cnt;
+		T_Var l_lds12 = newLaber(std::string("LDS_RD_SWITCH_1") + std::to_string(lab_cnt));
+		T_Var l_lds_e = newLaber(std::string("LDS_RD_SWITCH_2") + std::to_string(lab_cnt));
+		op3("v_cmp_ne_u32", "vcc", v_a_lds_read, v_a_lds_read_0);
+		op1("s_cbranch_vccnz", l_lds12);
+		op2("v_mov_b32", v_a_lds_read, v_a_lds_read_1);
+		op2("v_mov_b32", v_b_lds_read, v_b_lds_read_1);
+		op1("s_branch", l_lds_e);
+		wrLaber(l_lds12);
+		op3("v_cmp_eq_u32", "vcc", v_a_lds_read, v_a_lds_read_1);
+		op4("v_cndmask_b32", v_a_lds_read, v_a_lds_read_0, v_a_lds_read_2, "vcc");
+		op4("v_cndmask_b32", v_b_lds_read, v_b_lds_read_0, v_b_lds_read_2, "vcc");
+		wrLaber(l_lds_e);
+		lab_cnt++;
 	}
-
-	void read_lds_ping_to_mfma_ping(uint32_t k)
+	void read_lds_to_mfma_ping(uint32_t k)
 	{
 		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-		}
-	}
-	void read_lds_ping_to_mfma_pang(uint32_t k)
-	{
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_ping, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_ping, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-		}
-	}
-	void read_lds_pang_to_mfma_ping(uint32_t k)
-	{
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-		}
-		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-		}
-	}
-	void read_lds_pang_to_mfma_pang(uint32_t k)
-	{
-		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read_pang, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
-		}
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_ping + (lds_rd_instr_dw_sz * m), v_a_lds_read, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
 
 		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
-		{
-			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read_pang, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
-		}
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_ping + (lds_rd_instr_dw_sz * n), v_b_lds_read, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
+	}
+	void read_lds_to_mfma_pang(uint32_t k)
+	{
+		for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_a_pang + (lds_rd_instr_dw_sz * m), v_a_lds_read, a_lds_read_step_1 * k + a_lds_read_step_2 * m);
+
+		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
+			ds_read_dword(lds_rd_instr_dw_sz, v_mfma_b_pang + (lds_rd_instr_dw_sz * n), v_b_lds_read, b_lds_read_step_1 * k + b_lds_read_step_2 * n);
 	}
 	void mfma_mfma_ping()
 	{
@@ -1049,14 +1040,62 @@ private:
 			}
 		}
 	}
+	void mfma_mfma_ping_with_lds_switch()
+	{
+		uint32_t num = mfma_pttn1_per_wv * mfma_pttn0_per_wv;
+		uint32_t cnt = 0;
+		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
+		{
+			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
+			{
+				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
+				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
+				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
 
-	int32_t read_lds_waitcnt = -1;
-	void math_enter_loop()
+				op4(mfma_inst,
+					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
+					(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
+					(v_mfma_b_ping + b_idx_offset) ^ mfma_bgpr_per_mfma,
+					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
+				cnt++;
+				if ((cnt == num - 1) || (num == 1))
+				{
+					switch_lds_read();
+				}
+			}
+		}
+	}
+	void mfma_mfma_pang_with_read_lds()
+	{
+		uint32_t cnt = 0;
+		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
+		{
+			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
+			{
+				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
+				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
+				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
+
+				op4(mfma_inst,
+					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
+					(v_mfma_a_pang + a_idx_offset) ^ mfma_agpr_per_mfma,
+					(v_mfma_b_pang + b_idx_offset) ^ mfma_bgpr_per_mfma,
+					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma);
+				cnt++;
+				if (cnt == 1)
+				{
+					read_lds_to_mfma_ping(0);
+				}
+			}
+		}
+	}
+
+	void math_lds_enter_loop()
 	{
 		// read ping (do it in pre-loop)
-		read_lds_ping_to_mfma_ping(0);
+		read_lds_to_mfma_ping(0);
 		// read pang
-		read_lds_ping_to_mfma_pang(1);
+		read_lds_to_mfma_pang(1);
 
 		// loop
 		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
@@ -1066,34 +1105,31 @@ private:
 			mfma_mfma_ping();
 
 			// read ping
-			read_lds_ping_to_mfma_ping(2 * (k + 1) + 0);
+			read_lds_to_mfma_ping(2 * (k + 1) + 0);
 
 			// wait pang n' math pang
 			s_wait_lgkmcnt(read_lds_waitcnt);
 			mfma_mfma_pang();
 
 			// read pang
-			read_lds_ping_to_mfma_pang(2 * (k + 1) + 1);
+			read_lds_to_mfma_pang(2 * (k + 1) + 1);
 		}
 
 		// wait ping n' math ping
 		s_wait_lgkmcnt(read_lds_waitcnt);
-		mfma_mfma_ping();
+		mfma_mfma_ping_with_lds_switch();
 
-		// wait pang
+		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
-		// read lds-pang to mfma-ping for next loop
 		op0("s_barrier");
-		read_lds_pang_to_mfma_ping(0);
-		// math pang
-		mfma_mfma_pang();
+		mfma_mfma_pang_with_read_lds();
 	}
-	void math_lds_pang()
+	void math_lds_loop()
 	{
 		// read ping (do it in pre-loop)
-		//read_lds_pang_to_mfma_ping(0);
+		//read_lds_to_mfma_ping(0);
 		// read pang
-		read_lds_pang_to_mfma_pang(1);
+		read_lds_to_mfma_pang(1);
 
 		// loop
 		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
@@ -1103,34 +1139,31 @@ private:
 			mfma_mfma_ping();
 
 			// read ping
-			read_lds_pang_to_mfma_ping(2 * (k + 1) + 0);
+			read_lds_to_mfma_ping(2 * (k + 1) + 0);
 
 			// wait pang n' math pang
 			s_wait_lgkmcnt(read_lds_waitcnt);
 			mfma_mfma_pang();
 
 			// read pang
-			read_lds_pang_to_mfma_pang(2 * (k + 1) + 1);
+			read_lds_to_mfma_pang(2 * (k + 1) + 1);
 		}
 
 		// wait ping n' math ping
 		s_wait_lgkmcnt(read_lds_waitcnt);
-		mfma_mfma_ping();
+		mfma_mfma_ping_with_lds_switch();
 
-		// wait pang
+		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
-		// read lds-ping to mfma-ping for next loop
 		op0("s_barrier");
-		read_lds_ping_to_mfma_ping(0);
-		// math pang
-		mfma_mfma_pang();
+		mfma_mfma_pang_with_read_lds();
 	}
-	void math_lds_ping()
+	void math_lds_exit_loop()
 	{
 		// read ping (do it in pre-loop)
-		// read_lds_ping_to_mfma_ping(0);
+		//read_lds_to_mfma_ping(0);
 		// read pang
-		read_lds_ping_to_mfma_pang(1);
+		read_lds_to_mfma_pang(1);
 
 		// loop
 		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
@@ -1140,51 +1173,14 @@ private:
 			mfma_mfma_ping();
 
 			// read ping
-			read_lds_ping_to_mfma_ping(2 * (k + 1) + 0);
+			read_lds_to_mfma_ping(2 * (k + 1) + 0);
 
 			// wait pang n' math pang
 			s_wait_lgkmcnt(read_lds_waitcnt);
 			mfma_mfma_pang();
 
 			// read pang
-			read_lds_ping_to_mfma_pang(2 * (k + 1) + 1);
-		}
-
-		// wait ping n' math ping
-		s_wait_lgkmcnt(read_lds_waitcnt);
-		mfma_mfma_ping();
-
-		// wait pang
-		s_wait_lgkmcnt(0);
-		// read lds-pang to mfma-ping for next loop
-		op0("s_barrier");
-		read_lds_pang_to_mfma_ping(0);
-		// math pang
-		mfma_mfma_pang();
-	}
-	void math_exit_loop()
-	{
-		// read ping (do it in pre-loop)
-		//read_lds_pang_to_mfma_ping(0);
-		// read pang
-		read_lds_pang_to_mfma_pang(1);
-
-		// loop
-		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2 - 1; k++)
-		{
-			// wait ping n' math ping
-			s_wait_lgkmcnt(read_lds_waitcnt);
-			mfma_mfma_ping();
-
-			// read ping
-			read_lds_pang_to_mfma_ping(2 * (k + 1) + 0);
-
-			// wait pang n' math pang
-			s_wait_lgkmcnt(read_lds_waitcnt);
-			mfma_mfma_pang();
-
-			// read pang
-			read_lds_pang_to_mfma_pang(2 * (k + 1) + 1);
+			read_lds_to_mfma_pang(2 * (k + 1) + 1);
 		}
 
 		// wait ping n' math ping
@@ -1194,6 +1190,50 @@ private:
 		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
 		mfma_mfma_pang();
+	}
+
+	void fetch_loop()
+	{
+		if (fetch_glb_waitcnt < 0)
+			fetch_glb_waitcnt = a_fetch_times + b_fetch_times;
+
+		lds_buffer_cnt = newSgpr("lds_buffer_cnt");
+		op2("s_mov_b32", lds_buffer_cnt, 0);
+		op2("s_mov_b32", s_a_lds_write, s_a_lds_write_0);
+		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_0);
+
+		// =======================================================================
+		// enter loop
+		// =======================================================================
+		fetch_glb_to_lds_enter_loop();	// fetch 0
+		//s_wait_vmcnt(fetch_glb_waitcnt); op0("s_barrier");// fetch 0 ready
+
+		// =======================================================================
+		// loop
+		// =======================================================================
+		T_Var l_end_fetch_loop = newLaber("END_FETCH_LOOP");
+		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU));
+		op2("s_cmp_le_u32", s_tmp1, 1); // if(loop_cnt <= 1) scc = 1;
+		op1("s_cbranch_scc1", l_end_fetch_loop);// if(scc == 1) no loop;
+		op3("s_sub_u32", s_tmp1, s_tmp1, 1);// sub enter and exit loop
+
+		T_Var s_fetch_loop_cnt = newSgpr("s_cnt");
+		T_Var l_fetch_loop = newLaber("FETCH_LOOP");
+		op3("s_sub_u32", s_fetch_loop_cnt, s_tmp1, 1);
+		wrLaber(l_fetch_loop);
+		{
+			fetch_glb_to_lds_loop();
+			//s_wait_vmcnt(fetch_glb_waitcnt); op0("s_barrier"); // fetch last ready
+		}
+		op3("s_sub_u32", s_fetch_loop_cnt, s_fetch_loop_cnt, 1);
+		op1("s_cbranch_scc0", l_fetch_loop);
+		delVar(s_fetch_loop_cnt);
+		wrLaber(l_end_fetch_loop);
+
+		// =======================================================================
+		// exit loop
+		// =======================================================================
+		s_wait_vmcnt(0); op0("s_barrier"); // fetch last ready
 	}
 	void math_loop()
 	{
@@ -1212,43 +1252,42 @@ private:
 		for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
 			op2("v_accvgpr_write", acc_mfma_d + i, 0);
 
+		op1("s_setprio", 1);
+		op2("v_mov_b32", v_a_lds_read, v_a_lds_read_0);
+		op2("v_mov_b32", v_b_lds_read, v_b_lds_read_0);
+
+		// =======================================================================
+		// enter loop
+		// =======================================================================
+		op0("s_barrier"); // fetch 0 ready
+		math_lds_enter_loop();
+
 		// =======================================================================
 		// loop
 		// =======================================================================
 		T_Var l_end_math_loop = newLaber("END_MATH_LOOP");
-		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU * 2)); // *2 for ping pang unroll		
-		op2("s_cmp_le_u32", s_tmp1, 1); // if(loop_cnt <= 1) scc = 1;
+		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU)); // *2 for ping pang unroll		
+		op2("s_cmp_le_u32", s_tmp1, 2); // if(loop_cnt <= 1) scc = 1;
 		op1("s_cbranch_scc1", l_end_math_loop);// if(scc == 1) no loop;
-		op3("s_sub_u32", s_tmp1, s_tmp1, 1);// sub enter and exit loop
-		//op1("s_setprio", 1);
+		op3("s_sub_u32", s_tmp1, s_tmp1, 2);// sub enter and exit loop
 
-		// gemm lds ping		
-		op0("s_barrier");
-		math_enter_loop();
-
-		T_Var s_gemm_loop_cnt;
-		s_gemm_loop_cnt = f_s_loop(s_tmp1, "MATH_LOOP");
+		T_Var s_gemm_loop_cnt = newSgpr("s_cnt");
+		T_Var l_math_loop = newLaber("MATH_LOOP");
+		op3("s_sub_u32", s_gemm_loop_cnt, s_tmp1, 1);
+		wrLaber(l_math_loop);
 		{
-			// gemm lds pang
-			//op0("s_barrier");
-			math_lds_pang();
-
-			// gemm lds ping
-			//op0("s_barrier");
-			math_lds_ping();
+			math_lds_loop();
 		}
-		f_e_loop(s_gemm_loop_cnt, "MATH_LOOP");
+		op3("s_sub_u32", s_gemm_loop_cnt, s_gemm_loop_cnt, 1);
+		op1("s_cbranch_scc0", l_math_loop);
+		delVar(s_gemm_loop_cnt);
 		wrLaber(l_end_math_loop);
-		op1("s_setprio", 0);
 
 		// =======================================================================
 		// exit loop
 		// =======================================================================
-		// gemm lds pang
-		//op0("s_barrier");
-		math_exit_loop();
+		math_lds_exit_loop();
 	}
-
 	void store_result()
 	{
 		v_rslt_d = newVgpr("rslt_d", mfma_dgpr_per_mfma, 2);
@@ -1303,28 +1342,44 @@ private:
 		}
 	}
 
-	void free_gprs()
+	void free_fetch_gprs()
 	{
+		delVar(lds_buffer_cnt);
+
 		delVar(s_a_dscp);
 		delVar(v_a_fetch_offset);
-		delVar(s_a_lds_write_ping);
-		delVar(s_a_lds_write_pang);
-		delVar(v_a_lds_read_ping);
-		delVar(v_a_lds_read_pang);
+		delVar(s_a_lds_write);
+		delVar(s_a_lds_write_0);
+		delVar(s_a_lds_write_1);
+		delVar(s_a_lds_write_2);
 
 		delVar(s_b_dscp);
 		delVar(v_b_fetch_offset);
-		delVar(s_b_lds_write_ping);
-		delVar(s_b_lds_write_pang);
-		delVar(v_b_lds_read_ping);
-		delVar(v_b_lds_read_pang);
+		delVar(s_b_lds_write);
+		delVar(s_b_lds_write_0);
+		delVar(s_b_lds_write_1);
+		delVar(s_b_lds_write_2);
+	}
+	void free_math_gprs()
+	{
+		delVar(v_a_lds_read);
+		delVar(v_a_lds_read_0);
+		delVar(v_a_lds_read_1);
+		delVar(v_a_lds_read_2);
+
+		delVar(v_b_lds_read);
+		delVar(v_b_lds_read_0);
+		delVar(v_b_lds_read_1);
+		delVar(v_b_lds_read_2);
 
 		delVar(acc_mfma_d);
 
 		delVar(v_rslt_d);
 		delVar(s_d_dscp);
 		delVar(v_d_store_offset);
-
+	}
+	void free_gprs()
+	{
 		delVar(v_tmp1); delVar(v_tmp2);
 		delVar(s_tmp1);	delVar(s_tmp2);
 

@@ -1,4 +1,4 @@
-#include "HgemmMfma.h"
+#include "gemmMfma.h"
 
 using namespace feifei;
 
@@ -23,7 +23,7 @@ C:	______M_______
 static unsigned int g_debugDataNum = 1;
 static bool g_passCpu = false;
 
-static uint32_t g_DataType = 2; // 1=fp32; 2=fp16; 3=bf16
+static uint32_t g_DataType = 1; // 1=fp32; 2=fp16; 3=bf16
 static unsigned int M, N, K;
 static unsigned int Padding, StrideA0, StrideB0, StrideD0;
 static DataMem<float> * g_DataA, *g_DataB, *g_DataD, *g_DataRef;
@@ -73,7 +73,6 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	CmdArgs * ca = CmdArgs::GetCmdArgs();
 
 	uint32_t wave_method = 2;
-	uint32_t g_DataType = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TYPE);
 	uint32_t mfma_pttn0 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MT0);
 	uint32_t mfma_pttn1 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MT1);
 	uint32_t wave_pttn0 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WT0);
@@ -81,14 +80,16 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	uint32_t depth_u = *(uint32_t*)ca->GetOneArg(GEMM_ARG_DU);
 	uint32_t enTensileLayout = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TENSILE);
 
-	wave_method = 2;
-	g_DataType = 2;
-	mfma_pttn0 = 2;
-	mfma_pttn1 = 2;
-	wave_pttn0 = 2;
-	wave_pttn1 = 2;
-	depth_u = 16;
-	enTensileLayout = 0;
+	//mfma_pttn0 = 1;
+	//mfma_pttn1 = 1;
+	//wave_pttn0 = 2;
+	//wave_pttn1 = 2;
+	//depth_u = 16;
+	//enTensileLayout = 0;
+	LOG("data type = %d", g_DataType);
+	LOG("mfma pattern per wave  = [%d, %d]", mfma_pttn0, mfma_pttn1);
+	LOG("wave pattern per group = [%d, %d]", wave_pttn0, wave_pttn1);
+	LOG("loop unroll = %d", depth_u);
 
 	// get kernel parameters
 	if (g_DataType == 1)kernelParam.dataType = E_DataType::Fp32;
@@ -215,7 +216,7 @@ E_ReturnState GemmMfmaAsmSolution::verifyResult()
 	//g_DataRef->LogHst(E_DataFormat::Nomal, 2, 0, 127);
 	
 	g_DataD->Dump();
-	g_DataD->LogDev(E_DataFormat::Nomal, 2, 0, 127);
+	//g_DataD->LogDev(E_DataFormat::Nomal, 2, 0, 127);
 
 	g_dbg_buff->Dump();
 	//g_dbg_buff->LogDev(E_DataFormat::Nomal, 2, 0, 255);
@@ -240,13 +241,11 @@ void GemmMfmaSolver::generateSolver()
 void GemmMfmaProblem::initDataMem()
 {
 	ProblemCtrlBase::initDataMem();
+
+	CmdArgs * ca = CmdArgs::GetCmdArgs();
+	g_DataType = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TYPE);
 	
-	//M = 64; N = 64; K = 32; Padding = 0; // 1 cu 0 loop debug
-	//M = 4096; N = 4096; K = 256; Padding = 32;
-	//M = 128 * 8; N = 128 * 8; K = 512; Padding = 32; // for test
-	M = 128 * 8; N = 128 * 8; K = 192; Padding = 32; // for test
-	
-	//M = 7680; N = 8192; K = 8192; Padding = 32; // for tensile test
+	M = 128 * 6; N = 128 * 5; K = 256; Padding = 32;
 	StrideA0 = K + Padding;
 	StrideB0 = K + Padding;
 	StrideD0 = M + Padding;
