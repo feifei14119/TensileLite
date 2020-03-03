@@ -1,5 +1,5 @@
 #!/bin/bash
-# 。/test.sh > test_log.txt 2>&1
+# ./test.sh > test_log.txt 2>&1
 
 
 ./TensileLite.out -d 1 -m 1 -n 1 -x 1 -y 1 -u 16

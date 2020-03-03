@@ -149,6 +149,12 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	}
 
 	repeatTimes = 1;
+	if (g_passCpu == true)	repeatTimes = 10;
+	score.Calculation = 2.0 * M*N*K;
+
+	if (g_DataType == 1)score.TheoryFlops = 1.0 * 758 * 256 * 120; // fp32
+	if (g_DataType == 3)score.TheoryFlops = 1.0 * 758 * 512 * 120; // bf16
+	if (g_DataType == 2)score.TheoryFlops = 1.0 * 758 * 1024 * 120; // fp16
 	return E_ReturnState::SUCCESS;
 }
 E_ReturnState GemmMfmaAsmSolution::verifyResult()
@@ -244,11 +250,18 @@ void GemmMfmaProblem::initDataMem()
 
 	CmdArgs * ca = CmdArgs::GetCmdArgs();
 	g_DataType = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TYPE);
-	
-	M = 128 * 6; N = 128 * 5; K = 256; Padding = 32;
+	M = *(uint32_t*)ca->GetOneArg(GEMM_ARG_M);
+	N = *(uint32_t*)ca->GetOneArg(GEMM_ARG_N);
+	K = *(uint32_t*)ca->GetOneArg(GEMM_ARG_K);
+
+	//M = 128 * 6; N = 128 * 5; K = 256; Padding = 32;
+	//M = 4096; N = 512; K = 4096;
+	Padding = 32;
 	StrideA0 = K + Padding;
 	StrideB0 = K + Padding;
 	StrideD0 = M + Padding;
+
+	LOG("gemm size: M,N,K = %d, %d, %d.", M, N, K);
 
 	if ((M > 4096) || (K > 512))
 		g_passCpu = true;

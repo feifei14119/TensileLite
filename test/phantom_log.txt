@@ -1,0 +1,1644 @@
+[  LOG  ][02:17:02]Current Path: /home/feifei/projects
+[  LOG  ][02:17:02]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:02]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 1272(MHz)
++ Compute Capability: 1272666112.32654
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 1272672768
++ PCI DomainID Rate: 1272670208
++ PCI BusID: 32654
++ PCI DeviceID: 1272670720
++
++ Core Clock: 140249.1(GHz)
++ Multi Processor Number: 1272663040
++ SIMD Number per SM: 32654
++ Total SIMD Number: 1272663552
++ Max Threads per Block: 1272666624
++ Warp Size: 32654
++ Max Threads dim: (32654, 1272667136, 32654)
++ Max Grid Size: (1272667648, 32654, 1272668160)
++
++ Memory Clock: 140249.1(GHz)
++ Global Memory Bus Width: 1272665600(bit)
++ L2 Cache Size: 31.889(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32654
++ Shared Memory per Block: 127.556(TB)
++ Max Shared Memory Per CU: 127.556(TB)
++ Total Constant Memory: 1.185(GB)
++ Total Global Memory: 127.556(TB)
++ Max Pitch Memory: 31.889(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 1272663040
+- Shading Core per CU = 32654
+- Core Clock: 140249.1(GHz)
+- Performance(fp32) = 356979923981.827(TFlops)
+- Memory Clock: 140249.1(GHz)
+- Shared Memory per Block: 127.556(TB)
+- Total Global Memory: 127.556(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:02]Initialize DataMem.
+[  LOG  ][02:17:02]gemm size: M,N,K = 512, 512, 512.
+[  LOG  ][02:17:02]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:02]Generate program and build kernel.
+[  LOG  ][02:17:02]data type = 1
+[  LOG  ][02:17:02]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:02]wave pattern per group = [1, 4]
+[  LOG  ][02:17:02]loop unroll = 32
+[  LOG  ][02:17:02]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:02]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:02]wave tile per group = [1, 4].
+[  LOG  ][02:17:02]mfma tile per group = [1, 4].
+[  LOG  ][02:17:02]MT = [32, 128].
+[  LOG  ][02:17:02]group_size = [512, 1, 1].
+[  LOG  ][02:17:02]group_num = [16, 4, 1].
+[  LOG  ][02:17:02]global_size = [8192, 4, 1].
+[  LOG  ][02:17:03]Verify Success.
+[  LOG  ][02:17:03]Launch comb kernel for 1 times...
+[  LOG  ][02:17:03]Elapsed time = 53.440(us)
+[  LOG  ][02:17:03]Calculation = 0.27 G
+[  LOG  ][02:17:03]Performance = 5.02 TFLOPs
+[  LOG  ][02:17:03]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:03]Efficiency = 81.76%
+[  LOG  ][02:17:04]Current Path: /home/feifei/projects
+[  LOG  ][02:17:04]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:04]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -413(MHz)
++ Compute Capability: -413444096.32536
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -413437440
++ PCI DomainID Rate: -413440000
++ PCI BusID: 32536
++ PCI DeviceID: -413439488
++
++ Core Clock: 139744.9(GHz)
++ Multi Processor Number: -413447168
++ SIMD Number per SM: 32536
++ Total SIMD Number: -413446656
++ Max Threads per Block: -413443584
++ Warp Size: 32536
++ Max Threads dim: (32536, -413443072, 32536)
++ Max Grid Size: (-413442560, 32536, -413442048)
++
++ Memory Clock: 139744.9(GHz)
++ Global Memory Bus Width: -413444608(bit)
++ L2 Cache Size: 31.773(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32536
++ Shared Memory per Block: 127.097(TB)
++ Max Shared Memory Per CU: 127.097(TB)
++ Total Constant Memory: 16777216.000(TB)
++ Total Global Memory: 127.097(TB)
++ Max Pitch Memory: 31.773(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -413447168
+- Shading Core per CU = 32536
+- Core Clock: 139744.9(GHz)
+- Performance(fp32) = -115554154173.411(TFlops)
+- Memory Clock: 139744.9(GHz)
+- Shared Memory per Block: 127.097(TB)
+- Total Global Memory: 127.097(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:04]Initialize DataMem.
+[  LOG  ][02:17:04]gemm size: M,N,K = 512, 1024, 1024.
+[  LOG  ][02:17:04]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:04]Generate program and build kernel.
+[  LOG  ][02:17:04]data type = 1
+[  LOG  ][02:17:04]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:04]wave pattern per group = [1, 4]
+[  LOG  ][02:17:04]loop unroll = 32
+[  LOG  ][02:17:04]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:04]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:04]wave tile per group = [1, 4].
+[  LOG  ][02:17:04]mfma tile per group = [1, 4].
+[  LOG  ][02:17:04]MT = [32, 128].
+[  LOG  ][02:17:04]group_size = [512, 1, 1].
+[  LOG  ][02:17:04]group_num = [16, 8, 1].
+[  LOG  ][02:17:04]global_size = [8192, 8, 1].
+[  LOG  ][02:17:05]Launch comb kernel for 10 times...
+[  LOG  ][02:17:05]Elapsed time = 144.192(us)
+[  LOG  ][02:17:05]Calculation = 1.07 G
+[  LOG  ][02:17:05]Performance = 7.45 TFLOPs
+[  LOG  ][02:17:05]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:05]Efficiency = 121.20%
+[  LOG  ][02:17:06]Current Path: /home/feifei/projects
+[  LOG  ][02:17:06]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:06]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 305(MHz)
++ Compute Capability: 305354752.32690
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 305361408
++ PCI DomainID Rate: 305358848
++ PCI BusID: 32690
++ PCI DeviceID: 305359360
++
++ Core Clock: 140402.8(GHz)
++ Multi Processor Number: 305351680
++ SIMD Number per SM: 32690
++ Total SIMD Number: 305352192
++ Max Threads per Block: 305355264
++ Warp Size: 32690
++ Max Threads dim: (32690, 305355776, 32690)
++ Max Grid Size: (305356288, 32690, 305356800)
++
++ Memory Clock: 140402.8(GHz)
++ Global Memory Bus Width: 305354240(bit)
++ L2 Cache Size: 31.924(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32690
++ Shared Memory per Block: 127.696(TB)
++ Max Shared Memory Per CU: 127.696(TB)
++ Total Constant Memory: 291.212(MB)
++ Total Global Memory: 127.696(TB)
++ Max Pitch Memory: 31.924(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 305351680
+- Shading Core per CU = 32690
+- Core Clock: 140402.8(GHz)
+- Performance(fp32) = 85744597093.214(TFlops)
+- Memory Clock: 140402.8(GHz)
+- Shared Memory per Block: 127.696(TB)
+- Total Global Memory: 127.696(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:06]Initialize DataMem.
+[  LOG  ][02:17:06]gemm size: M,N,K = 512, 2048, 2048.
+[  LOG  ][02:17:06]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:06]Generate program and build kernel.
+[  LOG  ][02:17:06]data type = 1
+[  LOG  ][02:17:06]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:06]wave pattern per group = [1, 4]
+[  LOG  ][02:17:06]loop unroll = 32
+[  LOG  ][02:17:06]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:06]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:06]wave tile per group = [1, 4].
+[  LOG  ][02:17:06]mfma tile per group = [1, 4].
+[  LOG  ][02:17:06]MT = [32, 128].
+[  LOG  ][02:17:06]group_size = [512, 1, 1].
+[  LOG  ][02:17:06]group_num = [16, 16, 1].
+[  LOG  ][02:17:06]global_size = [8192, 16, 1].
+[  LOG  ][02:17:06]Launch comb kernel for 10 times...
+[  LOG  ][02:17:06]Elapsed time = 388.336(us)
+[  LOG  ][02:17:06]Calculation = 4.29 G
+[  LOG  ][02:17:06]Performance = 11.06 TFLOPs
+[  LOG  ][02:17:06]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:06]Efficiency = 180.01%
+[  LOG  ][02:17:08]Current Path: /home/feifei/projects
+[  LOG  ][02:17:08]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:08]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -529(MHz)
++ Compute Capability: -529836032.32753
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -529829376
++ PCI DomainID Rate: -529831936
++ PCI BusID: 32753
++ PCI DeviceID: -529831424
++
++ Core Clock: 140676.8(GHz)
++ Multi Processor Number: -529839104
++ SIMD Number per SM: 32753
++ Total SIMD Number: -529838592
++ Max Threads per Block: -529835520
++ Warp Size: 32753
++ Max Threads dim: (32753, -529835008, 32753)
++ Max Grid Size: (-529834496, 32753, -529833984)
++
++ Memory Clock: 140676.8(GHz)
++ Global Memory Bus Width: -529836544(bit)
++ L2 Cache Size: 31.985(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32753
++ Shared Memory per Block: 127.945(TB)
++ Max Shared Memory Per CU: 127.945(TB)
++ Total Constant Memory: 16777216.000(TB)
++ Total Global Memory: 127.945(TB)
++ Max Pitch Memory: 31.985(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -529839104
+- Shading Core per CU = 32753
+- Core Clock: 140676.8(GHz)
+- Performance(fp32) = -149072025980.760(TFlops)
+- Memory Clock: 140676.8(GHz)
+- Shared Memory per Block: 127.945(TB)
+- Total Global Memory: 127.945(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:08]Initialize DataMem.
+[  LOG  ][02:17:08]gemm size: M,N,K = 512, 4096, 4096.
+[  LOG  ][02:17:08]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:08]Generate program and build kernel.
+[  LOG  ][02:17:08]data type = 1
+[  LOG  ][02:17:08]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:08]wave pattern per group = [1, 4]
+[  LOG  ][02:17:08]loop unroll = 32
+[  LOG  ][02:17:08]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:08]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:08]wave tile per group = [1, 4].
+[  LOG  ][02:17:08]mfma tile per group = [1, 4].
+[  LOG  ][02:17:08]MT = [32, 128].
+[  LOG  ][02:17:08]group_size = [512, 1, 1].
+[  LOG  ][02:17:08]group_num = [16, 32, 1].
+[  LOG  ][02:17:08]global_size = [8192, 32, 1].
+[  LOG  ][02:17:08]Launch comb kernel for 10 times...
+[  LOG  ][02:17:08]Elapsed time = 1.262(ms)
+[  LOG  ][02:17:08]Calculation = 17.18 G
+[  LOG  ][02:17:08]Performance = 13.61 TFLOPs
+[  LOG  ][02:17:08]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:08]Efficiency = 221.59%
+[  LOG  ][02:17:10]Current Path: /home/feifei/projects
+[  LOG  ][02:17:10]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:10]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 378(MHz)
++ Compute Capability: 378755072.32728
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 378761728
++ PCI DomainID Rate: 378759168
++ PCI BusID: 32728
++ PCI DeviceID: 378759680
++
++ Core Clock: 140566.1(GHz)
++ Multi Processor Number: 378752000
++ SIMD Number per SM: 32728
++ Total SIMD Number: 378752512
++ Max Threads per Block: 378755584
++ Warp Size: 32728
++ Max Threads dim: (32728, 378756096, 32728)
++ Max Grid Size: (378756608, 32728, 378757120)
++
++ Memory Clock: 140566.1(GHz)
++ Global Memory Bus Width: 378754560(bit)
++ L2 Cache Size: 31.961(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32728
++ Shared Memory per Block: 127.844(TB)
++ Max Shared Memory Per CU: 127.844(TB)
++ Total Constant Memory: 361.212(MB)
++ Total Global Memory: 127.844(TB)
++ Max Pitch Memory: 31.961(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 378752000
+- Shading Core per CU = 32728
+- Core Clock: 140566.1(GHz)
+- Performance(fp32) = 106479503028.272(TFlops)
+- Memory Clock: 140566.1(GHz)
+- Shared Memory per Block: 127.844(TB)
+- Total Global Memory: 127.844(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:10]Initialize DataMem.
+[  LOG  ][02:17:10]gemm size: M,N,K = 512, 8192, 8192.
+[  LOG  ][02:17:11]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:11]Generate program and build kernel.
+[  LOG  ][02:17:11]data type = 1
+[  LOG  ][02:17:11]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:11]wave pattern per group = [1, 4]
+[  LOG  ][02:17:11]loop unroll = 32
+[  LOG  ][02:17:11]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:11]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:11]wave tile per group = [1, 4].
+[  LOG  ][02:17:11]mfma tile per group = [1, 4].
+[  LOG  ][02:17:11]MT = [32, 128].
+[  LOG  ][02:17:11]group_size = [512, 1, 1].
+[  LOG  ][02:17:11]group_num = [16, 64, 1].
+[  LOG  ][02:17:11]global_size = [8192, 64, 1].
+[  LOG  ][02:17:11]Launch comb kernel for 10 times...
+[  LOG  ][02:17:11]Elapsed time = 4.634(ms)
+[  LOG  ][02:17:11]Calculation = 68.72 G
+[  LOG  ][02:17:11]Performance = 14.83 TFLOPs
+[  LOG  ][02:17:11]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:11]Efficiency = 241.35%
+[  LOG  ][02:17:12]Current Path: /home/feifei/projects
+[  LOG  ][02:17:12]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:12]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 667(MHz)
++ Compute Capability: 667637760.32573
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 667644416
++ PCI DomainID Rate: 667641856
++ PCI BusID: 32573
++ PCI DeviceID: 667642368
++
++ Core Clock: 139900.6(GHz)
++ Multi Processor Number: 667634688
++ SIMD Number per SM: 32573
++ Total SIMD Number: 667635200
++ Max Threads per Block: 667638272
++ Warp Size: 32573
++ Max Threads dim: (32573, 667638784, 32573)
++ Max Grid Size: (667639296, 32573, 667639808)
++
++ Memory Clock: 139900.6(GHz)
++ Global Memory Bus Width: 667637248(bit)
++ L2 Cache Size: 31.810(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32573
++ Shared Memory per Block: 127.239(TB)
++ Max Shared Memory Per CU: 127.239(TB)
++ Total Constant Memory: 636.712(MB)
++ Total Global Memory: 127.239(TB)
++ Max Pitch Memory: 31.810(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 667634688
+- Shading Core per CU = 32573
+- Core Clock: 139900.6(GHz)
+- Performance(fp32) = 186805180017.001(TFlops)
+- Memory Clock: 139900.6(GHz)
+- Shared Memory per Block: 127.239(TB)
+- Total Global Memory: 127.239(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:13]Initialize DataMem.
+[  LOG  ][02:17:13]gemm size: M,N,K = 512, 512, 512.
+[  LOG  ][02:17:13]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:13]Generate program and build kernel.
+[  LOG  ][02:17:13]data type = 1
+[  LOG  ][02:17:13]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:13]wave pattern per group = [4, 1]
+[  LOG  ][02:17:13]loop unroll = 32
+[  LOG  ][02:17:13]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:13]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:13]wave tile per group = [4, 1].
+[  LOG  ][02:17:13]mfma tile per group = [4, 1].
+[  LOG  ][02:17:13]MT = [128, 32].
+[  LOG  ][02:17:13]group_size = [512, 1, 1].
+[  LOG  ][02:17:13]group_num = [4, 16, 1].
+[  LOG  ][02:17:13]global_size = [2048, 16, 1].
+[  LOG  ][02:17:13]Verify Success.
+[  LOG  ][02:17:14]Launch comb kernel for 1 times...
+[  LOG  ][02:17:14]Elapsed time = 53.920(us)
+[  LOG  ][02:17:14]Calculation = 0.27 G
+[  LOG  ][02:17:14]Performance = 4.98 TFLOPs
+[  LOG  ][02:17:14]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:14]Efficiency = 81.03%
+[  LOG  ][02:17:15]Current Path: /home/feifei/projects
+[  LOG  ][02:17:15]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:15]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -161(MHz)
++ Compute Capability: -161785856.32604
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -161779200
++ PCI DomainID Rate: -161781760
++ PCI BusID: 32604
++ PCI DeviceID: -161781248
++
++ Core Clock: 140037.2(GHz)
++ Multi Processor Number: -161788928
++ SIMD Number per SM: 32604
++ Total SIMD Number: -161788416
++ Max Threads per Block: -161785344
++ Warp Size: 32604
++ Max Threads dim: (32604, -161784832, 32604)
++ Max Grid Size: (-161784320, 32604, -161783808)
++
++ Memory Clock: 140037.2(GHz)
++ Global Memory Bus Width: -161786368(bit)
++ L2 Cache Size: 31.840(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32604
++ Shared Memory per Block: 127.363(TB)
++ Max Shared Memory Per CU: 127.363(TB)
++ Total Constant Memory: 16777216.000(TB)
++ Total Global Memory: 127.363(TB)
++ Max Pitch Memory: 31.840(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -161788928
+- Shading Core per CU = 32604
+- Core Clock: 140037.2(GHz)
+- Performance(fp32) = -45312808712.817(TFlops)
+- Memory Clock: 140037.2(GHz)
+- Shared Memory per Block: 127.363(TB)
+- Total Global Memory: 127.363(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:15]Initialize DataMem.
+[  LOG  ][02:17:15]gemm size: M,N,K = 1024, 512, 1024.
+[  LOG  ][02:17:15]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:15]Generate program and build kernel.
+[  LOG  ][02:17:15]data type = 1
+[  LOG  ][02:17:15]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:15]wave pattern per group = [4, 1]
+[  LOG  ][02:17:15]loop unroll = 32
+[  LOG  ][02:17:15]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:15]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:15]wave tile per group = [4, 1].
+[  LOG  ][02:17:15]mfma tile per group = [4, 1].
+[  LOG  ][02:17:15]MT = [128, 32].
+[  LOG  ][02:17:15]group_size = [512, 1, 1].
+[  LOG  ][02:17:15]group_num = [8, 16, 1].
+[  LOG  ][02:17:15]global_size = [4096, 16, 1].
+[  LOG  ][02:17:15]Launch comb kernel for 10 times...
+[  LOG  ][02:17:15]Elapsed time = 142.560(us)
+[  LOG  ][02:17:15]Calculation = 1.07 G
+[  LOG  ][02:17:15]Performance = 7.53 TFLOPs
+[  LOG  ][02:17:15]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:15]Efficiency = 122.59%
+[  LOG  ][02:17:16]Current Path: /home/feifei/projects
+[  LOG  ][02:17:16]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:16]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 1261(MHz)
++ Compute Capability: 1261131776.32735
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 1261138432
++ PCI DomainID Rate: 1261135872
++ PCI BusID: 32735
++ PCI DeviceID: 1261136384
++
++ Core Clock: 140597.0(GHz)
++ Multi Processor Number: 1261128704
++ SIMD Number per SM: 32735
++ Total SIMD Number: 1261129216
++ Max Threads per Block: 1261132288
++ Warp Size: 32735
++ Max Threads dim: (32735, 1261132800, 32735)
++ Max Grid Size: (1261133312, 32735, 1261133824)
++
++ Memory Clock: 140597.0(GHz)
++ Global Memory Bus Width: 1261131264(bit)
++ L2 Cache Size: 31.968(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32735
++ Shared Memory per Block: 127.872(TB)
++ Max Shared Memory Per CU: 127.872(TB)
++ Total Constant Memory: 1.175(GB)
++ Total Global Memory: 127.872(TB)
++ Max Pitch Memory: 31.968(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 1261128704
+- Shading Core per CU = 32735
+- Core Clock: 140597.0(GHz)
+- Performance(fp32) = 354622008017.186(TFlops)
+- Memory Clock: 140597.0(GHz)
+- Shared Memory per Block: 127.872(TB)
+- Total Global Memory: 127.872(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:17]Initialize DataMem.
+[  LOG  ][02:17:17]gemm size: M,N,K = 2048, 512, 2048.
+[  LOG  ][02:17:17]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:17]Generate program and build kernel.
+[  LOG  ][02:17:17]data type = 1
+[  LOG  ][02:17:17]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:17]wave pattern per group = [4, 1]
+[  LOG  ][02:17:17]loop unroll = 32
+[  LOG  ][02:17:17]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:17]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:17]wave tile per group = [4, 1].
+[  LOG  ][02:17:17]mfma tile per group = [4, 1].
+[  LOG  ][02:17:17]MT = [128, 32].
+[  LOG  ][02:17:17]group_size = [512, 1, 1].
+[  LOG  ][02:17:17]group_num = [16, 16, 1].
+[  LOG  ][02:17:17]global_size = [8192, 16, 1].
+[  LOG  ][02:17:17]Launch comb kernel for 10 times...
+[  LOG  ][02:17:17]Elapsed time = 384.768(us)
+[  LOG  ][02:17:17]Calculation = 4.29 G
+[  LOG  ][02:17:17]Performance = 11.16 TFLOPs
+[  LOG  ][02:17:17]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:17]Efficiency = 181.68%
+[  LOG  ][02:17:18]Current Path: /home/feifei/projects
+[  LOG  ][02:17:18]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:18]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -1639(MHz)
++ Compute Capability: -1639753728.32680
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -1639747072
++ PCI DomainID Rate: -1639749632
++ PCI BusID: 32680
++ PCI DeviceID: -1639749120
++
++ Core Clock: 140362.2(GHz)
++ Multi Processor Number: -1639756800
++ SIMD Number per SM: 32680
++ Total SIMD Number: -1639756288
++ Max Threads per Block: -1639753216
++ Warp Size: 32680
++ Max Threads dim: (32680, -1639752704, 32680)
++ Max Grid Size: (-1639752192, 32680, -1639751680)
++
++ Memory Clock: 140362.2(GHz)
++ Global Memory Bus Width: -1639754240(bit)
++ L2 Cache Size: 31.914(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32680
++ Shared Memory per Block: 127.659(TB)
++ Max Shared Memory Per CU: 127.659(TB)
++ Total Constant Memory: 16777215.999(TB)
++ Total Global Memory: 127.659(TB)
++ Max Pitch Memory: 31.914(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -1639756800
+- Shading Core per CU = 32680
+- Core Clock: 140362.2(GHz)
+- Performance(fp32) = -460319555635.541(TFlops)
+- Memory Clock: 140362.2(GHz)
+- Shared Memory per Block: 127.659(TB)
+- Total Global Memory: 127.659(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:18]Initialize DataMem.
+[  LOG  ][02:17:18]gemm size: M,N,K = 4096, 512, 4096.
+[  LOG  ][02:17:19]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:19]Generate program and build kernel.
+[  LOG  ][02:17:19]data type = 1
+[  LOG  ][02:17:19]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:19]wave pattern per group = [4, 1]
+[  LOG  ][02:17:19]loop unroll = 32
+[  LOG  ][02:17:19]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:19]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:19]wave tile per group = [4, 1].
+[  LOG  ][02:17:19]mfma tile per group = [4, 1].
+[  LOG  ][02:17:19]MT = [128, 32].
+[  LOG  ][02:17:19]group_size = [512, 1, 1].
+[  LOG  ][02:17:19]group_num = [32, 16, 1].
+[  LOG  ][02:17:19]global_size = [16384, 16, 1].
+[  LOG  ][02:17:19]Launch comb kernel for 10 times...
+[  LOG  ][02:17:19]Elapsed time = 1.245(ms)
+[  LOG  ][02:17:19]Calculation = 17.18 G
+[  LOG  ][02:17:19]Performance = 13.80 TFLOPs
+[  LOG  ][02:17:19]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:19]Efficiency = 224.59%
+[  LOG  ][02:17:20]Current Path: /home/feifei/projects
+[  LOG  ][02:17:20]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:20]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -916(MHz)
++ Compute Capability: -916760576.32756
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -916753920
++ PCI DomainID Rate: -916756480
++ PCI BusID: 32756
++ PCI DeviceID: -916755968
++
++ Core Clock: 140689.3(GHz)
++ Multi Processor Number: -916763648
++ SIMD Number per SM: 32756
++ Total SIMD Number: -916763136
++ Max Threads per Block: -916760064
++ Warp Size: 32756
++ Max Threads dim: (32756, -916759552, 32756)
++ Max Grid Size: (-916759040, 32756, -916758528)
++
++ Memory Clock: 140689.3(GHz)
++ Global Memory Bus Width: -916761088(bit)
++ L2 Cache Size: 31.988(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32756
++ Shared Memory per Block: 127.956(TB)
++ Max Shared Memory Per CU: 127.956(TB)
++ Total Constant Memory: 16777215.999(TB)
++ Total Global Memory: 127.956(TB)
++ Max Pitch Memory: 31.988(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -916763648
+- Shading Core per CU = 32756
+- Core Clock: 140689.3(GHz)
+- Performance(fp32) = -257957577154.495(TFlops)
+- Memory Clock: 140689.3(GHz)
+- Shared Memory per Block: 127.956(TB)
+- Total Global Memory: 127.956(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:20]Initialize DataMem.
+[  LOG  ][02:17:20]gemm size: M,N,K = 8192, 512, 8192.
+[  LOG  ][02:17:21]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:21]Generate program and build kernel.
+[  LOG  ][02:17:21]data type = 1
+[  LOG  ][02:17:21]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:21]wave pattern per group = [4, 1]
+[  LOG  ][02:17:21]loop unroll = 32
+[  LOG  ][02:17:21]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:21]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:21]wave tile per group = [4, 1].
+[  LOG  ][02:17:21]mfma tile per group = [4, 1].
+[  LOG  ][02:17:21]MT = [128, 32].
+[  LOG  ][02:17:21]group_size = [512, 1, 1].
+[  LOG  ][02:17:21]group_num = [64, 16, 1].
+[  LOG  ][02:17:21]global_size = [32768, 16, 1].
+[  LOG  ][02:17:21]Launch comb kernel for 10 times...
+[  LOG  ][02:17:22]Elapsed time = 4.744(ms)
+[  LOG  ][02:17:22]Calculation = 68.72 G
+[  LOG  ][02:17:22]Performance = 14.48 TFLOPs
+[  LOG  ][02:17:22]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:22]Efficiency = 235.75%
+[  LOG  ][02:17:23]Current Path: /home/feifei/projects
+[  LOG  ][02:17:23]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:23]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 1865(MHz)
++ Compute Capability: 1865111552.32753
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 1865118208
++ PCI DomainID Rate: 1865115648
++ PCI BusID: 32753
++ PCI DeviceID: 1865116160
++
++ Core Clock: 140674.9(GHz)
++ Multi Processor Number: 1865108480
++ SIMD Number per SM: 32753
++ Total SIMD Number: 1865108992
++ Max Threads per Block: 1865112064
++ Warp Size: 32753
++ Max Threads dim: (32753, 1865112576, 32753)
++ Max Grid Size: (1865113088, 32753, 1865113600)
++
++ Memory Clock: 140674.9(GHz)
++ Global Memory Bus Width: 1865111040(bit)
++ L2 Cache Size: 31.985(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32753
++ Shared Memory per Block: 127.943(TB)
++ Max Shared Memory Per CU: 127.943(TB)
++ Total Constant Memory: 1.737(GB)
++ Total Global Memory: 127.943(TB)
++ Max Pitch Memory: 31.985(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 1865108480
+- Shading Core per CU = 32753
+- Core Clock: 140674.9(GHz)
+- Performance(fp32) = 524748149881.596(TFlops)
+- Memory Clock: 140674.9(GHz)
+- Shared Memory per Block: 127.943(TB)
+- Total Global Memory: 127.943(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:23]Initialize DataMem.
+[  LOG  ][02:17:23]gemm size: M,N,K = 480, 512, 512.
+[  LOG  ][02:17:23]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:23]Generate program and build kernel.
+[  LOG  ][02:17:23]data type = 1
+[  LOG  ][02:17:23]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:23]wave pattern per group = [1, 4]
+[  LOG  ][02:17:23]loop unroll = 32
+[  LOG  ][02:17:23]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:23]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:23]wave tile per group = [1, 4].
+[  LOG  ][02:17:23]mfma tile per group = [1, 4].
+[  LOG  ][02:17:23]MT = [32, 128].
+[  LOG  ][02:17:23]group_size = [512, 1, 1].
+[  LOG  ][02:17:23]group_num = [15, 4, 1].
+[  LOG  ][02:17:23]global_size = [7680, 4, 1].
+[  LOG  ][02:17:24]Verify Success.
+[  LOG  ][02:17:24]Launch comb kernel for 1 times...
+[  LOG  ][02:17:24]Elapsed time = 56.320(us)
+[  LOG  ][02:17:24]Calculation = 0.25 G
+[  LOG  ][02:17:24]Performance = 4.47 TFLOPs
+[  LOG  ][02:17:24]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:24]Efficiency = 72.73%
+[  LOG  ][02:17:25]Current Path: /home/feifei/projects
+[  LOG  ][02:17:25]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:25]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 561(MHz)
++ Compute Capability: 561731584.32683
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 561738240
++ PCI DomainID Rate: 561735680
++ PCI BusID: 32683
++ PCI DeviceID: 561736192
++
++ Core Clock: 140373.0(GHz)
++ Multi Processor Number: 561728512
++ SIMD Number per SM: 32683
++ Total SIMD Number: 561729024
++ Max Threads per Block: 561732096
++ Warp Size: 32683
++ Max Threads dim: (32683, 561732608, 32683)
++ Max Grid Size: (561733120, 32683, 561733632)
++
++ Memory Clock: 140373.0(GHz)
++ Global Memory Bus Width: 561731072(bit)
++ L2 Cache Size: 31.917(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32683
++ Shared Memory per Block: 127.668(TB)
++ Max Shared Memory Per CU: 127.668(TB)
++ Total Constant Memory: 535.712(MB)
++ Total Global Memory: 127.668(TB)
++ Max Pitch Memory: 31.917(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 561728512
+- Shading Core per CU = 32683
+- Core Clock: 140373.0(GHz)
+- Performance(fp32) = 157703151702.102(TFlops)
+- Memory Clock: 140373.0(GHz)
+- Shared Memory per Block: 127.668(TB)
+- Total Global Memory: 127.668(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:25]Initialize DataMem.
+[  LOG  ][02:17:25]gemm size: M,N,K = 480, 1024, 1024.
+[  LOG  ][02:17:25]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:25]Generate program and build kernel.
+[  LOG  ][02:17:25]data type = 1
+[  LOG  ][02:17:25]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:25]wave pattern per group = [1, 4]
+[  LOG  ][02:17:25]loop unroll = 32
+[  LOG  ][02:17:25]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:25]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:25]wave tile per group = [1, 4].
+[  LOG  ][02:17:25]mfma tile per group = [1, 4].
+[  LOG  ][02:17:25]MT = [32, 128].
+[  LOG  ][02:17:25]group_size = [512, 1, 1].
+[  LOG  ][02:17:25]group_num = [15, 8, 1].
+[  LOG  ][02:17:25]global_size = [7680, 8, 1].
+[  LOG  ][02:17:25]Launch comb kernel for 10 times...
+[  LOG  ][02:17:25]Elapsed time = 103.296(us)
+[  LOG  ][02:17:25]Calculation = 1.01 G
+[  LOG  ][02:17:25]Performance = 9.75 TFLOPs
+[  LOG  ][02:17:25]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:25]Efficiency = 158.61%
+[  LOG  ][02:17:27]Current Path: /home/feifei/projects
+[  LOG  ][02:17:27]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:27]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -80(MHz)
++ Compute Capability: -80521216.32747
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -80514560
++ PCI DomainID Rate: -80517120
++ PCI BusID: 32747
++ PCI DeviceID: -80516608
++
++ Core Clock: 140651.5(GHz)
++ Multi Processor Number: -80524288
++ SIMD Number per SM: 32747
++ Total SIMD Number: -80523776
++ Max Threads per Block: -80520704
++ Warp Size: 32747
++ Max Threads dim: (32747, -80520192, 32747)
++ Max Grid Size: (-80519680, 32747, -80519168)
++
++ Memory Clock: 140651.5(GHz)
++ Global Memory Bus Width: -80521728(bit)
++ L2 Cache Size: 31.979(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32747
++ Shared Memory per Block: 127.922(TB)
++ Max Shared Memory Per CU: 127.922(TB)
++ Total Constant Memory: 16777216.000(TB)
++ Total Global Memory: 127.922(TB)
++ Max Pitch Memory: 31.979(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -80524288
+- Shading Core per CU = 32747
+- Core Clock: 140651.5(GHz)
+- Performance(fp32) = -22651581126.553(TFlops)
+- Memory Clock: 140651.5(GHz)
+- Shared Memory per Block: 127.922(TB)
+- Total Global Memory: 127.922(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:27]Initialize DataMem.
+[  LOG  ][02:17:27]gemm size: M,N,K = 480, 2048, 2048.
+[  LOG  ][02:17:27]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:27]Generate program and build kernel.
+[  LOG  ][02:17:27]data type = 1
+[  LOG  ][02:17:27]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:27]wave pattern per group = [1, 4]
+[  LOG  ][02:17:27]loop unroll = 32
+[  LOG  ][02:17:27]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:27]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:27]wave tile per group = [1, 4].
+[  LOG  ][02:17:27]mfma tile per group = [1, 4].
+[  LOG  ][02:17:27]MT = [32, 128].
+[  LOG  ][02:17:27]group_size = [512, 1, 1].
+[  LOG  ][02:17:27]group_num = [15, 16, 1].
+[  LOG  ][02:17:27]global_size = [7680, 16, 1].
+[  LOG  ][02:17:27]Launch comb kernel for 10 times...
+[  LOG  ][02:17:27]Elapsed time = 323.088(us)
+[  LOG  ][02:17:27]Calculation = 4.03 G
+[  LOG  ][02:17:27]Performance = 12.46 TFLOPs
+[  LOG  ][02:17:27]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:27]Efficiency = 202.84%
+[  LOG  ][02:17:28]Current Path: /home/feifei/projects
+[  LOG  ][02:17:28]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:28]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -1295(MHz)
++ Compute Capability: -1295820800.32621
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -1295814144
++ PCI DomainID Rate: -1295816704
++ PCI BusID: 32621
++ PCI DeviceID: -1295816192
++
++ Core Clock: 140109.1(GHz)
++ Multi Processor Number: -1295823872
++ SIMD Number per SM: 32621
++ Total SIMD Number: -1295823360
++ Max Threads per Block: -1295820288
++ Warp Size: 32621
++ Max Threads dim: (32621, -1295819776, 32621)
++ Max Grid Size: (-1295819264, 32621, -1295818752)
++
++ Memory Clock: 140109.1(GHz)
++ Global Memory Bus Width: -1295821312(bit)
++ L2 Cache Size: 31.856(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32621
++ Shared Memory per Block: 127.429(TB)
++ Max Shared Memory Per CU: 127.429(TB)
++ Total Constant Memory: 16777215.999(TB)
++ Total Global Memory: 127.429(TB)
++ Max Pitch Memory: 31.856(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -1295823872
+- Shading Core per CU = 32621
+- Core Clock: 140109.1(GHz)
+- Performance(fp32) = -363113360223.952(TFlops)
+- Memory Clock: 140109.1(GHz)
+- Shared Memory per Block: 127.429(TB)
+- Total Global Memory: 127.429(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:29]Initialize DataMem.
+[  LOG  ][02:17:29]gemm size: M,N,K = 480, 4096, 4096.
+[  LOG  ][02:17:29]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:29]Generate program and build kernel.
+[  LOG  ][02:17:29]data type = 1
+[  LOG  ][02:17:29]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:29]wave pattern per group = [1, 4]
+[  LOG  ][02:17:29]loop unroll = 32
+[  LOG  ][02:17:29]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:29]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:29]wave tile per group = [1, 4].
+[  LOG  ][02:17:29]mfma tile per group = [1, 4].
+[  LOG  ][02:17:29]MT = [32, 128].
+[  LOG  ][02:17:29]group_size = [512, 1, 1].
+[  LOG  ][02:17:29]group_num = [15, 32, 1].
+[  LOG  ][02:17:29]global_size = [7680, 32, 1].
+[  LOG  ][02:17:29]Launch comb kernel for 10 times...
+[  LOG  ][02:17:29]Elapsed time = 1.115(ms)
+[  LOG  ][02:17:29]Calculation = 16.11 G
+[  LOG  ][02:17:29]Performance = 14.45 TFLOPs
+[  LOG  ][02:17:29]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:29]Efficiency = 235.12%
+[  LOG  ][02:17:31]Current Path: /home/feifei/projects
+[  LOG  ][02:17:31]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:31]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 1592(MHz)
++ Compute Capability: 1592481792.32584
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 1592488448
++ PCI DomainID Rate: 1592485888
++ PCI BusID: 32584
++ PCI DeviceID: 1592486400
++
++ Core Clock: 139948.8(GHz)
++ Multi Processor Number: 1592478720
++ SIMD Number per SM: 32584
++ Total SIMD Number: 1592479232
++ Max Threads per Block: 1592482304
++ Warp Size: 32584
++ Max Threads dim: (32584, 1592482816, 32584)
++ Max Grid Size: (1592483328, 32584, 1592483840)
++
++ Memory Clock: 139948.8(GHz)
++ Global Memory Bus Width: 1592481280(bit)
++ L2 Cache Size: 31.820(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32584
++ Shared Memory per Block: 127.283(TB)
++ Max Shared Memory Per CU: 127.283(TB)
++ Total Constant Memory: 1.483(GB)
++ Total Global Memory: 127.283(TB)
++ Max Pitch Memory: 31.820(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 1592478720
+- Shading Core per CU = 32584
+- Core Clock: 139948.8(GHz)
+- Performance(fp32) = 445731136907.023(TFlops)
+- Memory Clock: 139948.8(GHz)
+- Shared Memory per Block: 127.283(TB)
+- Total Global Memory: 127.283(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:31]Initialize DataMem.
+[  LOG  ][02:17:31]gemm size: M,N,K = 480, 8192, 8192.
+[  LOG  ][02:17:32]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:32]Generate program and build kernel.
+[  LOG  ][02:17:32]data type = 1
+[  LOG  ][02:17:32]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:32]wave pattern per group = [1, 4]
+[  LOG  ][02:17:32]loop unroll = 32
+[  LOG  ][02:17:32]kernel name = sgemm_col_TN_MT32x128x32_2wave
+[  LOG  ][02:17:32]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:32]wave tile per group = [1, 4].
+[  LOG  ][02:17:32]mfma tile per group = [1, 4].
+[  LOG  ][02:17:32]MT = [32, 128].
+[  LOG  ][02:17:32]group_size = [512, 1, 1].
+[  LOG  ][02:17:32]group_num = [15, 64, 1].
+[  LOG  ][02:17:32]global_size = [7680, 64, 1].
+[  LOG  ][02:17:32]Launch comb kernel for 10 times...
+[  LOG  ][02:17:32]Elapsed time = 4.209(ms)
+[  LOG  ][02:17:32]Calculation = 64.42 G
+[  LOG  ][02:17:32]Performance = 15.30 TFLOPs
+[  LOG  ][02:17:32]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:32]Efficiency = 249.10%
+[  LOG  ][02:17:33]Current Path: /home/feifei/projects
+[  LOG  ][02:17:33]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:33]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -766(MHz)
++ Compute Capability: -766289920.32530
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -766283264
++ PCI DomainID Rate: -766285824
++ PCI BusID: 32530
++ PCI DeviceID: -766285312
++
++ Core Clock: 139718.8(GHz)
++ Multi Processor Number: -766292992
++ SIMD Number per SM: 32530
++ Total SIMD Number: -766292480
++ Max Threads per Block: -766289408
++ Warp Size: 32530
++ Max Threads dim: (32530, -766288896, 32530)
++ Max Grid Size: (-766288384, 32530, -766287872)
++
++ Memory Clock: 139718.8(GHz)
++ Global Memory Bus Width: -766290432(bit)
++ L2 Cache Size: 31.768(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32530
++ Shared Memory per Block: 127.074(TB)
++ Max Shared Memory Per CU: 127.074(TB)
++ Total Constant Memory: 16777215.999(TB)
++ Total Global Memory: 127.074(TB)
++ Max Pitch Memory: 31.768(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -766292992
+- Shading Core per CU = 32530
+- Core Clock: 139718.8(GHz)
+- Performance(fp32) = -214130954210.926(TFlops)
+- Memory Clock: 139718.8(GHz)
+- Shared Memory per Block: 127.074(TB)
+- Total Global Memory: 127.074(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:34]Initialize DataMem.
+[  LOG  ][02:17:34]gemm size: M,N,K = 512, 480, 512.
+[  LOG  ][02:17:34]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:34]Generate program and build kernel.
+[  LOG  ][02:17:34]data type = 1
+[  LOG  ][02:17:34]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:34]wave pattern per group = [4, 1]
+[  LOG  ][02:17:34]loop unroll = 32
+[  LOG  ][02:17:34]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:34]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:34]wave tile per group = [4, 1].
+[  LOG  ][02:17:34]mfma tile per group = [4, 1].
+[  LOG  ][02:17:34]MT = [128, 32].
+[  LOG  ][02:17:34]group_size = [512, 1, 1].
+[  LOG  ][02:17:34]group_num = [4, 15, 1].
+[  LOG  ][02:17:34]global_size = [2048, 15, 1].
+[  LOG  ][02:17:34]Verify Success.
+[  LOG  ][02:17:35]Launch comb kernel for 1 times...
+[  LOG  ][02:17:35]Elapsed time = 53.440(us)
+[  LOG  ][02:17:35]Calculation = 0.25 G
+[  LOG  ][02:17:35]Performance = 4.71 TFLOPs
+[  LOG  ][02:17:35]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:35]Efficiency = 76.65%
+[  LOG  ][02:17:36]Current Path: /home/feifei/projects
+[  LOG  ][02:17:36]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:36]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 1284(MHz)
++ Compute Capability: 1284724736.32687
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 1284731392
++ PCI DomainID Rate: 1284728832
++ PCI BusID: 32687
++ PCI DeviceID: 1284729344
++
++ Core Clock: 140390.9(GHz)
++ Multi Processor Number: 1284721664
++ SIMD Number per SM: 32687
++ Total SIMD Number: 1284722176
++ Max Threads per Block: 1284725248
++ Warp Size: 32687
++ Max Threads dim: (32687, 1284725760, 32687)
++ Max Grid Size: (1284726272, 32687, 1284726784)
++
++ Memory Clock: 140390.9(GHz)
++ Global Memory Bus Width: 1284724224(bit)
++ L2 Cache Size: 31.921(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32687
++ Shared Memory per Block: 127.685(TB)
++ Max Shared Memory Per CU: 127.685(TB)
++ Total Constant Memory: 1.196(GB)
++ Total Global Memory: 127.685(TB)
++ Max Pitch Memory: 31.921(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 1284721664
+- Shading Core per CU = 32687
+- Core Clock: 140390.9(GHz)
+- Performance(fp32) = 360726555552.452(TFlops)
+- Memory Clock: 140390.9(GHz)
+- Shared Memory per Block: 127.685(TB)
+- Total Global Memory: 127.685(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:36]Initialize DataMem.
+[  LOG  ][02:17:36]gemm size: M,N,K = 1024, 480, 1024.
+[  LOG  ][02:17:36]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:36]Generate program and build kernel.
+[  LOG  ][02:17:36]data type = 1
+[  LOG  ][02:17:36]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:36]wave pattern per group = [4, 1]
+[  LOG  ][02:17:36]loop unroll = 32
+[  LOG  ][02:17:36]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:36]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:36]wave tile per group = [4, 1].
+[  LOG  ][02:17:36]mfma tile per group = [4, 1].
+[  LOG  ][02:17:36]MT = [128, 32].
+[  LOG  ][02:17:36]group_size = [512, 1, 1].
+[  LOG  ][02:17:36]group_num = [8, 15, 1].
+[  LOG  ][02:17:36]global_size = [4096, 15, 1].
+[  LOG  ][02:17:36]Launch comb kernel for 10 times...
+[  LOG  ][02:17:36]Elapsed time = 98.112(us)
+[  LOG  ][02:17:36]Calculation = 1.01 G
+[  LOG  ][02:17:36]Performance = 10.26 TFLOPs
+[  LOG  ][02:17:36]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:36]Efficiency = 166.99%
+[  LOG  ][02:17:37]Current Path: /home/feifei/projects
+[  LOG  ][02:17:37]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:37]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: -1568(MHz)
++ Compute Capability: -1568974848.32606
++ Support Concurrent Kernels: TRUE
++ Compute Mode: -1568968192
++ PCI DomainID Rate: -1568970752
++ PCI BusID: 32606
++ PCI DeviceID: -1568970240
++
++ Core Clock: 140044.4(GHz)
++ Multi Processor Number: -1568977920
++ SIMD Number per SM: 32606
++ Total SIMD Number: -1568977408
++ Max Threads per Block: -1568974336
++ Warp Size: 32606
++ Max Threads dim: (32606, -1568973824, 32606)
++ Max Grid Size: (-1568973312, 32606, -1568972800)
++
++ Memory Clock: 140044.4(GHz)
++ Global Memory Bus Width: -1568975360(bit)
++ L2 Cache Size: 31.842(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32606
++ Shared Memory per Block: 127.370(TB)
++ Max Shared Memory Per CU: 127.370(TB)
++ Total Constant Memory: 16777215.999(TB)
++ Total Global Memory: 127.370(TB)
++ Max Pitch Memory: 31.842(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = -1568977920
+- Shading Core per CU = 32606
+- Core Clock: 140044.4(GHz)
+- Performance(fp32) = -439453092449.840(TFlops)
+- Memory Clock: 140044.4(GHz)
+- Shared Memory per Block: 127.370(TB)
+- Total Global Memory: 127.370(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:37]Initialize DataMem.
+[  LOG  ][02:17:37]gemm size: M,N,K = 2048, 480, 2048.
+[  LOG  ][02:17:38]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:38]Generate program and build kernel.
+[  LOG  ][02:17:38]data type = 1
+[  LOG  ][02:17:38]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:38]wave pattern per group = [4, 1]
+[  LOG  ][02:17:38]loop unroll = 32
+[  LOG  ][02:17:38]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:38]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:38]wave tile per group = [4, 1].
+[  LOG  ][02:17:38]mfma tile per group = [4, 1].
+[  LOG  ][02:17:38]MT = [128, 32].
+[  LOG  ][02:17:38]group_size = [512, 1, 1].
+[  LOG  ][02:17:38]group_num = [16, 15, 1].
+[  LOG  ][02:17:38]global_size = [8192, 15, 1].
+[  LOG  ][02:17:38]Launch comb kernel for 10 times...
+[  LOG  ][02:17:38]Elapsed time = 305.296(us)
+[  LOG  ][02:17:38]Calculation = 4.03 G
+[  LOG  ][02:17:38]Performance = 13.19 TFLOPs
+[  LOG  ][02:17:38]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:38]Efficiency = 214.66%
+[  LOG  ][02:17:39]Current Path: /home/feifei/projects
+[  LOG  ][02:17:39]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:39]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 355(MHz)
++ Compute Capability: 355162112.32700
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 355168768
++ PCI DomainID Rate: 355166208
++ PCI BusID: 32700
++ PCI DeviceID: 355166720
++
++ Core Clock: 140445.8(GHz)
++ Multi Processor Number: 355159040
++ SIMD Number per SM: 32700
++ Total SIMD Number: 355159552
++ Max Threads per Block: 355162624
++ Warp Size: 32700
++ Max Threads dim: (32700, 355163136, 32700)
++ Max Grid Size: (355163648, 32700, 355164160)
++
++ Memory Clock: 140445.8(GHz)
++ Global Memory Bus Width: 355161600(bit)
++ L2 Cache Size: 31.934(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32700
++ Shared Memory per Block: 127.735(TB)
++ Max Shared Memory Per CU: 127.735(TB)
++ Total Constant Memory: 338.712(MB)
++ Total Global Memory: 127.735(TB)
++ Max Pitch Memory: 31.934(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 355159040
+- Shading Core per CU = 32700
+- Core Clock: 140445.8(GHz)
+- Performance(fp32) = 99761324685.799(TFlops)
+- Memory Clock: 140445.8(GHz)
+- Shared Memory per Block: 127.735(TB)
+- Total Global Memory: 127.735(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:39]Initialize DataMem.
+[  LOG  ][02:17:39]gemm size: M,N,K = 4096, 480, 4096.
+[  LOG  ][02:17:39]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:39]Generate program and build kernel.
+[  LOG  ][02:17:39]data type = 1
+[  LOG  ][02:17:39]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:39]wave pattern per group = [4, 1]
+[  LOG  ][02:17:39]loop unroll = 32
+[  LOG  ][02:17:39]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:39]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:39]wave tile per group = [4, 1].
+[  LOG  ][02:17:39]mfma tile per group = [4, 1].
+[  LOG  ][02:17:39]MT = [128, 32].
+[  LOG  ][02:17:39]group_size = [512, 1, 1].
+[  LOG  ][02:17:39]group_num = [32, 15, 1].
+[  LOG  ][02:17:39]global_size = [16384, 15, 1].
+[  LOG  ][02:17:40]Launch comb kernel for 10 times...
+[  LOG  ][02:17:40]Elapsed time = 1.086(ms)
+[  LOG  ][02:17:40]Calculation = 16.11 G
+[  LOG  ][02:17:40]Performance = 14.83 TFLOPs
+[  LOG  ][02:17:40]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:40]Efficiency = 241.34%
+[  LOG  ][02:17:41]Current Path: /home/feifei/projects
+[  LOG  ][02:17:41]Work Path: /home/feifei/projects/
+[  LOG  ][02:17:41]Kernel Path: /home/feifei/projects/kernel/
+=========================================================================
+= HIP-HCC Info:
+=========================================================================
+- Platform Name: 
+- Version: 
+- Vendor Name: 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Device Name: 
++ GCN Arch: 908
++ Is APU: TRUE
++ Is Multi-Gpu Board: TRUE
++ Clock Instruction Rate: 1165(MHz)
++ Compute Capability: 1165711360.32614
++ Support Concurrent Kernels: TRUE
++ Compute Mode: 1165718016
++ PCI DomainID Rate: 1165715456
++ PCI BusID: 32614
++ PCI DeviceID: 1165715968
++
++ Core Clock: 140077.2(GHz)
++ Multi Processor Number: 1165708288
++ SIMD Number per SM: 32614
++ Total SIMD Number: 1165708800
++ Max Threads per Block: 1165711872
++ Warp Size: 32614
++ Max Threads dim: (32614, 1165712384, 32614)
++ Max Grid Size: (1165712896, 32614, 1165713408)
++
++ Memory Clock: 140077.2(GHz)
++ Global Memory Bus Width: 1165710848(bit)
++ L2 Cache Size: 31.850(KB)
++ Support Global L1 Cache: TRUE
++ Support Local L1 Cache: TRUE
++ Reg per Block: 32614
++ Shared Memory per Block: 127.399(TB)
++ Max Shared Memory Per CU: 127.399(TB)
++ Total Constant Memory: 1.086(GB)
++ Total Global Memory: 127.399(TB)
++ Max Pitch Memory: 31.850(KB)
++ Support Map Host Memory: TRUE
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-------------------------------------------------------------------------
+- Device Name: 
+- Compute Unit Number = 1165708288
+- Shading Core per CU = 32614
+- Core Clock: 140077.2(GHz)
+- Performance(fp32) = 326578517281.853(TFlops)
+- Memory Clock: 140077.2(GHz)
+- Shared Memory per Block: 127.399(TB)
+- Total Global Memory: 127.399(TB)
+-------------------------------------------------------------------------
+*************************************************************************
+* Problem Name: mfma gemm.
+*************************************************************************
+[  LOG  ][02:17:41]Initialize DataMem.
+[  LOG  ][02:17:41]gemm size: M,N,K = 8192, 480, 8192.
+[  LOG  ][02:17:42]Run CPU Calculate.
+=========================================================================
+= solution Name: asm auto-gen.
+=========================================================================
+[  LOG  ][02:17:42]Generate program and build kernel.
+[  LOG  ][02:17:42]data type = 1
+[  LOG  ][02:17:42]mfma pattern per wave  = [1, 1]
+[  LOG  ][02:17:42]wave pattern per group = [4, 1]
+[  LOG  ][02:17:42]loop unroll = 32
+[  LOG  ][02:17:42]kernel name = sgemm_col_TN_MT128x32x32_2wave
+[  LOG  ][02:17:42]mfma tile per wave  = [1, 1].
+[  LOG  ][02:17:42]wave tile per group = [4, 1].
+[  LOG  ][02:17:42]mfma tile per group = [4, 1].
+[  LOG  ][02:17:42]MT = [128, 32].
+[  LOG  ][02:17:42]group_size = [512, 1, 1].
+[  LOG  ][02:17:42]group_num = [64, 15, 1].
+[  LOG  ][02:17:42]global_size = [32768, 15, 1].
+[  LOG  ][02:17:42]Launch comb kernel for 10 times...
+[  LOG  ][02:17:42]Elapsed time = 4.466(ms)
+[  LOG  ][02:17:42]Calculation = 64.42 G
+[  LOG  ][02:17:42]Performance = 14.43 TFLOPs
+[  LOG  ][02:17:42]Theory Performance = 6.14 TFLOPs
+[  LOG  ][02:17:42]Efficiency = 234.80%

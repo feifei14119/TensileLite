@@ -655,6 +655,9 @@ namespace feifei
 	{
 		CMD_ARG_HELP,
 		GEMM_ARG_TYPE,
+		GEMM_ARG_M,
+		GEMM_ARG_N,
+		GEMM_ARG_K,
 		GEMM_ARG_MT0,
 		GEMM_ARG_MT1,
 		GEMM_ARG_WT0,
@@ -696,6 +699,9 @@ namespace feifei
 		{
 			addOneArg(CMD_ARG_HELP, E_DataType::String, "help", 'h', "help", "help infomation");
 			addOneArg(GEMM_ARG_TYPE, E_DataType::Int, "1", 'd', "data-type", "data type. (1)");
+			addOneArg(GEMM_ARG_M, E_DataType::Int, "1024", 'a', "gemm-m", "gemm m dim. (1024)");
+			addOneArg(GEMM_ARG_N, E_DataType::Int, "1024", 'b', "gemm-n", "gemm n dim. (1024)");
+			addOneArg(GEMM_ARG_K, E_DataType::Int, "1024", 'c', "gemm-k", "gemm k dim. (1024)");
 			addOneArg(GEMM_ARG_MT0, E_DataType::Int, "1", 'm', "mfma-pttn0", "mfma times in m dim. (1)");
 			addOneArg(GEMM_ARG_MT1, E_DataType::Int, "1", 'n', "mfma-pttn1", "mfma times in n dim. (1)");
 			addOneArg(GEMM_ARG_WT0, E_DataType::Int, "1", 'x', "wave-pttn0", "wave number in m dim. (1)");
