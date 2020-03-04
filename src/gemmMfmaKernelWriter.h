@@ -351,12 +351,19 @@ protected:
 				lds_wr_instr_dw_sz = 1;
 				lds_rd_instr_dw_sz = 1;
 			}
-			else
+			else if (k_param.dataType == E_DataType::Fp16)
 			{
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 2;
 				lds_wr_instr_dw_sz = 1;
 				lds_rd_instr_dw_sz = 2;
+			}
+			else if (k_param.dataType == E_DataType::Bf16)
+			{
+				glb_load_instr_dw_sz = 1;
+				glb_store_instr_dw_sz = 2;
+				lds_wr_instr_dw_sz = 1;
+				lds_rd_instr_dw_sz = 1;
 			}
 			glb_load_instr_sz = glb_load_instr_dw_sz * GPR_SZ;
 			glb_store_instr_sz = glb_store_instr_dw_sz * GPR_SZ;
@@ -877,6 +884,7 @@ private:
 			mfma_dgpr_tt_sz = mfma_t * elem_sz / GPR_SZ;
 			d_glb_step1 = mfma_t * elem_sz * mfma_lan_per_tt; // 同一笔mfma指令里每mfma_tt个vgpr的步进(Byte)
 			if (k_param.dataType == E_DataType::Fp16)	d_glb_step1 = 16;
+			if (k_param.dataType == E_DataType::Bf16)	d_glb_step1 = 16;
 			d_glb_step2 = mfma_m * elem_sz; // MT0方向(不切换mfma_pattan行时),同thread同R0的步进(Byte),需要累加到立即数偏移
 			T_Var v_d_glb_step3 = newVgpr("d_glb_step3");// MT1方向(切换mfma_pattan行时),同thread同R0的步进(Byte),需要累加到v_addr_offset上
 			op3("v_lshlrev_b32", v_tmp1, log2Int(mfma_n), s_args[k_arg_StrideD0]);// d_glb_step3 = mfma_n * stride
@@ -942,6 +950,21 @@ private:
 			op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);
 		for (uint32_t i = 0; i < b_fetch_times; i++)
 			op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);
+	}
+	void fetch_glb_to_lds_test()
+	{
+		op2("s_mov_b32", "m0", s_a_lds_write);
+		for (uint32_t i = 0; i < a_fetch_times; i++)
+			buffer_load_dword(1, v_tmp1, v_a_fetch_offset + i, s_a_dscp, 0, false, true, true, a_lds_sz_per_wv_per_time * i);
+
+		op2("s_mov_b32", "m0", s_b_lds_write);
+		for (uint32_t i = 0; i < b_fetch_times; i++)
+			buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
+		
+		s_wait_vmcnt(0);
+		op0("s_barrier");
+		move_to_next_glb_fetch();
+		switch_lds_write();
 	}
 	void fetch_glb_to_lds_enter_loop()
 	{
@@ -1014,6 +1037,22 @@ private:
 				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
 				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
 
+				/*op2h("v_cvt_f32_u32", v_tmp1, 1);
+				op2h("v_cvt_f32_u32", v_tmp2, 1);
+				op3("v_lshrrev_b32", v_tmp1, 16, v_tmp1);
+				op3("v_lshrrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_lshlrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_or_b32", v_mfma_a_ping, v_tmp1, v_tmp2);
+				op1("s_nop", 32);
+				op3h("v_and_b32", v_tmp1, v_tid_in_wave, 7);
+				op2h("v_cvt_f32_u32", v_tmp2, v_tmp1);
+				op2h("v_cvt_f32_u32", v_tmp1, v_tmp1);
+				op3("v_lshrrev_b32", v_tmp1, 16, v_tmp1);
+				op3("v_lshrrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_lshlrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_or_b32", v_mfma_b_pang, v_tmp1, v_tmp2);
+				op1("s_nop", 32);*/
+
 				op4(mfma_inst,
 					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
 					(v_mfma_a_ping + a_idx_offset) ^ mfma_agpr_per_mfma,
@@ -1031,6 +1070,22 @@ private:
 				uint32_t a_idx_offset = mfma_agpr_per_mfma * m;
 				uint32_t b_idx_offset = mfma_bgpr_per_mfma * n;
 				uint32_t acc_idx_offset = mfma_dgpr_per_mfma * (n * mfma_pttn0_per_wv + m);
+
+				/*op2h("v_cvt_f32_u32", v_tmp1, 1);
+				op2h("v_cvt_f32_u32", v_tmp2, 1);
+				op3("v_lshrrev_b32", v_tmp1, 16, v_tmp1);
+				op3("v_lshrrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_lshlrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_or_b32", v_mfma_a_ping, v_tmp1, v_tmp2);
+				op1("s_nop", 32);
+				op3h("v_and_b32", v_tmp1, v_tid_in_wave, 7);
+				op2h("v_cvt_f32_u32", v_tmp2, v_tmp1);
+				op2h("v_cvt_f32_u32", v_tmp1, v_tmp1);
+				op3("v_lshrrev_b32", v_tmp1, 16, v_tmp1);
+				op3("v_lshrrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_lshlrev_b32", v_tmp2, 16, v_tmp2);
+				op3("v_or_b32", v_mfma_b_pang, v_tmp1, v_tmp2);
+				op1("s_nop", 32);*/
 
 				op4(mfma_inst,
 					(acc_mfma_d + acc_idx_offset) ^ mfma_dgpr_per_mfma,
@@ -1090,6 +1145,22 @@ private:
 		}
 	}
 
+	void math_lds_test()
+	{
+		op0("s_barrier");
+
+		for (uint32_t k = 0; k < k_param.DepthU / mfma_k / 2; k++)
+		{
+			read_lds_to_mfma_ping(2 * k + 0);
+			s_wait_lgkmcnt(0);
+			mfma_mfma_ping();
+
+			read_lds_to_mfma_pang(2 * k + 1);
+			s_wait_lgkmcnt(0);
+			mfma_mfma_pang();
+		}
+		switch_lds_read();
+	}
 	void math_lds_enter_loop()
 	{
 		// read ping (do it in pre-loop)
@@ -1202,6 +1273,9 @@ private:
 		op2("s_mov_b32", s_a_lds_write, s_a_lds_write_0);
 		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_0);
 
+	//	fetch_glb_to_lds_test();
+	//	fetch_glb_to_lds_test();
+	//	return;
 		// =======================================================================
 		// enter loop
 		// =======================================================================
@@ -1245,7 +1319,7 @@ private:
 		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
 		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
 		acc_mfma_d = newAgpr("mfma_d", mfma_dgpr_per_mfma * mfma_blk_per_wv);
-
+		
 		// =======================================================================
 		// init acc gpr
 		// =======================================================================
@@ -1256,6 +1330,9 @@ private:
 		op2("v_mov_b32", v_a_lds_read, v_a_lds_read_0);
 		op2("v_mov_b32", v_b_lds_read, v_b_lds_read_0);
 
+	//	math_lds_test();
+	//	math_lds_test();
+	//	return;
 		// =======================================================================
 		// enter loop
 		// =======================================================================
@@ -1336,6 +1413,23 @@ private:
 					}
 					else if (k_param.dataType == E_DataType::Bf16) // bf16
 					{
+						op1("s_nop", 32);
+						op3("v_lshrrev_b32", v_rslt_d + i, 16, v_rslt_d + i);
+						if ((i + 1) % 2 == 0)
+						{
+							op3("v_lshlrev_b32", v_rslt_d + i, 16, v_rslt_d + i);
+							op3("v_or_b32", v_rslt_d + (i / 2), v_rslt_d + (i - 1), v_rslt_d + i);
+						}
+						if ((i + 1) % 4 == 0)
+						{
+							uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * (i / 4);
+
+							buffer_store_dword(glb_store_instr_dw_sz,
+								v_rslt_d + 2 * (i / 4),
+								v_d_store_offset + n,
+								s_d_dscp, 0, false, true,
+								instr_offset);
+						}
 					}
 				}
 			}
