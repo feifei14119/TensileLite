@@ -14,9 +14,9 @@ int main(int argc, char *argv[])
 
 	GpuRuntimeBase * pGpuRt = GpuRuntime::GetInstance();
 
-	pGpuRt->PrintRuntimeInfo(true);
+	//pGpuRt->PrintRuntimeInfo(true);
 	pGpuRt->SellectDevice(0);
-	pGpuRt->Device()->PrintDeviceInfo();
+	//pGpuRt->Device()->PrintDeviceInfo();
 
 	TEST(GemmMfmaProblem);
 	RunGpuExample();

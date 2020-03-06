@@ -2,52 +2,52 @@
 # ./phantom_test.sh > phantom_log.txt 2>&1
 
 
-./TensileLite.out -d 1 -a 512 -b  512 -c  512 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 512 -b 1024 -c 1024 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 512 -b 2048 -c 2048 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 512 -b 4096 -c 4096 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 512 -b 8192 -c 8192 -m 1 -n 1 -x 1 -y 4 -u 32
+./TensileLite.out -d 1 -m  512 -n  512 -k  512 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  512 -n 1024 -k 1024 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  512 -n 2048 -k 2048 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  512 -n 4096 -k 4096 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  512 -n 8192 -k 8192 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
 
-./TensileLite.out -d 1 -a  512 -b 512 -c  512 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 1024 -b 512 -c 1024 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 2048 -b 512 -c 2048 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 4096 -b 512 -c 4096 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 8192 -b 512 -c 8192 -m 1 -n 1 -x 4 -y 1 -u 32
+./TensileLite.out -d 1 -m  512 -n  512 -k  512 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 1024 -n  512 -k 1024 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 2048 -n  512 -k 2048 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 4096 -n  512 -k 4096 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 8192 -n  512 -k 8192 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
 
-./TensileLite.out -d 1 -a 480 -b  512 -c  512 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 480 -b 1024 -c 1024 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 480 -b 2048 -c 2048 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 480 -b 4096 -c 4096 -m 1 -n 1 -x 1 -y 4 -u 32
-./TensileLite.out -d 1 -a 480 -b 8192 -c 8192 -m 1 -n 1 -x 1 -y 4 -u 32
+./TensileLite.out -d 1 -m  480 -n  512 -k  512 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  480 -n 1024 -k 1024 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  480 -n 2048 -k 2048 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  480 -n 4096 -k 4096 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m  480 -n 8192 -k 8192 -r 1 -s 1 -x 1 -y 4 -u 32 -v 0 -l 1 -f 2
 
-./TensileLite.out -d 1 -a  512 -b 480 -c  512 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 1024 -b 480 -c 1024 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 2048 -b 480 -c 2048 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 4096 -b 480 -c 4096 -m 1 -n 1 -x 4 -y 1 -u 32
-./TensileLite.out -d 1 -a 8192 -b 480 -c 8192 -m 1 -n 1 -x 4 -y 1 -u 32
+./TensileLite.out -d 1 -m  512 -n  480 -k  512 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 1024 -n  480 -k 1024 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 2048 -n  480 -k 2048 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 4096 -n  480 -k 4096 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
+./TensileLite.out -d 1 -m 8192 -n  480 -k 8192 -r 1 -s 1 -x 4 -y 1 -u 32 -v 0 -l 1 -f 2
 
-###########################################################################
+##################################################################################
 
-./TensileLite.out -d 3 -a 512 -b  512 -c  512 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 512 -b 1024 -c 1024 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 512 -b 2048 -c 2048 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 512 -b 4096 -c 4096 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 512 -b 8192 -c 8192 -m 1 -n 1 -x 1 -y 4 -u 64
+./TensileLite.out -d 3 -m  512 -n  512 -k  512 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  512 -n 1024 -k 1024 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  512 -n 2048 -k 2048 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  512 -n 4096 -k 4096 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  512 -n 8192 -k 8192 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
 
-./TensileLite.out -d 3 -a  512 -b 512 -c  512 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 1024 -b 512 -c 1024 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 2048 -b 512 -c 2048 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 4096 -b 512 -c 4096 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 8192 -b 512 -c 8192 -m 1 -n 1 -x 4 -y 1 -u 64
+./TensileLite.out -d 3 -m  512 -n  512 -k  512 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 1024 -n  512 -k 1024 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 2048 -n  512 -k 2048 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 4096 -n  512 -k 4096 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 8192 -n  512 -k 8192 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
 
-./TensileLite.out -d 3 -a 480 -b  512 -c  512 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 480 -b 1024 -c 1024 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 480 -b 2048 -c 2048 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 480 -b 4096 -c 4096 -m 1 -n 1 -x 1 -y 4 -u 64
-./TensileLite.out -d 3 -a 480 -b 8192 -c 8192 -m 1 -n 1 -x 1 -y 4 -u 64
+./TensileLite.out -d 3 -m  480 -n  512 -k  512 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  480 -n 1024 -k 1024 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  480 -n 2048 -k 2048 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  480 -n 4096 -k 4096 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m  480 -n 8192 -k 8192 -r 1 -s 1 -x 1 -y 4 -u 64 -v 0 -l 1 -f 2
 
-./TensileLite.out -d 3 -a  512 -b 480 -c  512 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 1024 -b 480 -c 1024 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 2048 -b 480 -c 2048 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 4096 -b 480 -c 4096 -m 1 -n 1 -x 4 -y 1 -u 64
-./TensileLite.out -d 3 -a 8192 -b 480 -c 8192 -m 1 -n 1 -x 4 -y 1 -u 64
+./TensileLite.out -d 3 -m  512 -n  480 -k  512 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 1024 -n  480 -k 1024 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 2048 -n  480 -k 2048 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 4096 -n  480 -k 4096 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2
+./TensileLite.out -d 3 -m 8192 -n  480 -k 8192 -r 1 -s 1 -x 4 -y 1 -u 64 -v 0 -l 1 -f 2

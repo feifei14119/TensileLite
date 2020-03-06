@@ -3896,16 +3896,14 @@ namespace feifei
 		T_Var f_s_loop(T loopCnt, std::string loopName)
 		{
 			T_Var s_cnt = newSgpr("s_cnt");
-			op2("s_mov_b32", s_cnt, loopCnt);
-			tableCnt = 0;
-			wrLine(loopName + ":");
-			tableCnt++;
+			T_Var t_lab = newLaber(loopName);
+			op3("s_sub_u32", s_cnt, loopCnt, 1);
+			wrLaber(t_lab);
 			return s_cnt;
 		}
 		E_ReturnState f_e_loop(T_Var s_cnt, std::string loopName)
 		{
 			op3("s_sub_u32", s_cnt, s_cnt, 1);
-			op2("s_cmpk_eq_i32", s_cnt, 0);
 			T_Var t_lab = newLaber(loopName);
 			op1("s_cbranch_scc0", t_lab);
 			delVar(s_cnt);

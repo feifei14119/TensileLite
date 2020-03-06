@@ -103,6 +103,48 @@ namespace feifei
 		return log2;
 	}
 
+	inline unsigned int f32_as_u32(float f) { union { float f; unsigned int u; } v; v.f = f; return v.u; }
+	inline float u32_as_f32(unsigned int u) { union { float f; unsigned int u; } v; v.u = u; return v.f; }
+	inline int clamp_int(int i, int l, int h) { return std::min(std::max(i, l), h); }
+	inline short cvtFP32toFP16(float f)
+	{
+		uint32_t * p = (uint32_t*)&f;
+
+		unsigned int sig = (*p >> 16) & 0x8000;
+		int exp = ((*p >> 23) & 0xff) - 127 + 15;
+		unsigned int m = ((*p >> 11) & 0xffe) | ((*p & 0xfff) != 0);
+		unsigned int i = 0x7c00 | (m != 0 ? 0x0200 : 0);
+		unsigned int n = (exp << 12) | m;
+
+		int b = clamp_int(1 - exp, 0, 13);
+		unsigned int d = (0x1000 | m) >> b;
+		d |= (d << b) != (0x1000 | m);
+		unsigned int v = exp < 1 ? d : n;
+
+		v = (v >> 2) + (((v & 0x7) == 3) | ((v & 0x7) > 5));
+		v = exp > 30 ? 0x7c00 : v;
+		v = exp == 143 ? i : v;
+
+		short r = sig | v;
+		return r;
+	}
+	inline float cvtFP16toFP32(unsigned short a)
+	{
+		unsigned int u = ((a << 13) + 0x70000000U) & 0x8fffe000U;
+		unsigned int v = f32_as_u32(u32_as_f32(u) * pow(1.0, 112)) + 0x38000000U;
+		u = (a & 0x7fff) != 0 ? v : u;
+		return u32_as_f32(u) * pow(1.0, -112);
+	}
+	inline short cvtFP32toBF16(float in)
+	{
+		return (*(uint32_t*)(&in) >> 16);
+	}
+	inline float cvtBF16toFP32(unsigned short in)
+	{
+		uint32_t tmp = in << 16;
+		return *(float*)(&tmp);
+	}
+
 #define isPow2(value)  ((value & (value - 1)) == 0)
 #define modMask(value) (value - 1)
 #define divCeil(a,b)	((a + b - 1) / b)
@@ -663,6 +705,9 @@ namespace feifei
 		GEMM_ARG_WT0,
 		GEMM_ARG_WT1,
 		GEMM_ARG_DU,
+		GEMM_ARG_VERIFY,
+		GEMM_ARG_LOOP,
+		GEMM_ARG_BUFFER,
 		GEMM_ARG_TENSILE
 	} E_ArgId;
 
@@ -699,14 +744,17 @@ namespace feifei
 		{
 			addOneArg(CMD_ARG_HELP, E_DataType::String, "help", 'h', "help", "help infomation");
 			addOneArg(GEMM_ARG_TYPE, E_DataType::Int, "1", 'd', "data-type", "data type. (1)");
-			addOneArg(GEMM_ARG_M, E_DataType::Int, "1024", 'a', "gemm-m", "gemm m dim. (1024)");
-			addOneArg(GEMM_ARG_N, E_DataType::Int, "1024", 'b', "gemm-n", "gemm n dim. (1024)");
-			addOneArg(GEMM_ARG_K, E_DataType::Int, "1024", 'c', "gemm-k", "gemm k dim. (1024)");
-			addOneArg(GEMM_ARG_MT0, E_DataType::Int, "1", 'm', "mfma-pttn0", "mfma times in m dim. (1)");
-			addOneArg(GEMM_ARG_MT1, E_DataType::Int, "1", 'n', "mfma-pttn1", "mfma times in n dim. (1)");
+			addOneArg(GEMM_ARG_M, E_DataType::Int, "1024", 'm', "gemm-m", "gemm m dim. (1024)");
+			addOneArg(GEMM_ARG_N, E_DataType::Int, "1024", 'n', "gemm-n", "gemm n dim. (1024)");
+			addOneArg(GEMM_ARG_K, E_DataType::Int, "1024", 'k', "gemm-k", "gemm k dim. (1024)");
+			addOneArg(GEMM_ARG_MT0, E_DataType::Int, "1", 'r', "mfma-pttn0", "mfma times in m dim. (1)");
+			addOneArg(GEMM_ARG_MT1, E_DataType::Int, "1", 's', "mfma-pttn1", "mfma times in n dim. (1)");
 			addOneArg(GEMM_ARG_WT0, E_DataType::Int, "1", 'x', "wave-pttn0", "wave number in m dim. (1)");
 			addOneArg(GEMM_ARG_WT1, E_DataType::Int, "1", 'y', "wave-pttn1", "wave number in n dim. (1)");
 			addOneArg(GEMM_ARG_DU, E_DataType::Int, "16", 'u', "depth-u", "k dim loop unroll. (16)");
+			addOneArg(GEMM_ARG_VERIFY, E_DataType::Int, "1", 'v', "verify", "enable cpu verify. (1)");
+			addOneArg(GEMM_ARG_LOOP, E_DataType::Int, "100", 'l', "loop", "loop times for perf test. (100)");
+			addOneArg(GEMM_ARG_BUFFER, E_DataType::Int, "3", 'f', "buffer", "lds buffer number. (3)");
 			addOneArg(GEMM_ARG_TENSILE, E_DataType::Int, "0", 't', "tensile", "if use tensile format. (0)");
 		}
 		void helpText();

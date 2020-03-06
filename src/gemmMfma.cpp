@@ -21,7 +21,9 @@ C:	______M_______
 */
 
 static unsigned int g_debugDataNum = 1;
-static bool g_passCpu = false;
+static bool g_cpuVerify = true;
+uint32_t enTensileLayout = 0;
+uint32_t wave_method = 2;
 
 static uint32_t g_DataType; // 1=fp32; 2=fp16; 3=bf16
 static unsigned int M, N, K;
@@ -32,48 +34,6 @@ static DataMem<float> * g_bfDataA, *g_bfDataB, *g_bfDataD, *g_bfDataRef;
 static DataMem<float> * g_dbg_buff, *g_dbg_buff_16to32; // g_dbg_buff: device debug buffer(fp32 or fp16);
 														// g_dbg_buff_16to32: if g_dbg_buff is fp16, cvt it to fp32 to this buffer
 
-static inline unsigned int f32_as_u32(float f) { union { float f; unsigned int u; } v; v.f = f; return v.u; }
-static inline float u32_as_f32(unsigned int u) { union { float f; unsigned int u; } v; v.u = u; return v.f; }
-static inline int clamp_int(int i, int l, int h) { return std::min(std::max(i, l), h); }
-static short cvtFP32toFP16(float f)
-{
-	uint32_t * p = (uint32_t*)&f;
-
-	unsigned int sig = (*p >> 16) & 0x8000;
-	int exp = ((*p >> 23) & 0xff) - 127 + 15;
-	unsigned int m = ((*p >> 11) & 0xffe) | ((*p & 0xfff) != 0);
-	unsigned int i = 0x7c00 | (m != 0 ? 0x0200 : 0);
-	unsigned int n = (exp << 12) | m;
-
-	int b = clamp_int(1 - exp, 0, 13);
-	unsigned int d = (0x1000 | m) >> b;
-	d |= (d << b) != (0x1000 | m);
-	unsigned int v = exp < 1 ? d : n;
-
-	v = (v >> 2) + (((v & 0x7) == 3) | ((v & 0x7) > 5));
-	v = exp > 30 ? 0x7c00 : v;
-	v = exp == 143 ? i : v;
-
-	short r = sig | v;
-	return r;
-}
-static float cvtFP16toFP32(unsigned short a)
-{
-	unsigned int u = ((a << 13) + 0x70000000U) & 0x8fffe000U;
-	unsigned int v = f32_as_u32(u32_as_f32(u) * pow(1.0, 112)) + 0x38000000U;
-	u = (a & 0x7fff) != 0 ? v : u;
-	return u32_as_f32(u) * pow(1.0, -112);
-}
-static short cvtFP32toBF16(float in)
-{
-	return (*(uint32_t*)(&in) >> 16);
-}
-static float cvtBF16toFP32(unsigned short in)
-{
-	uint32_t tmp = in << 16;
-	return *(float*)(&tmp);
-}
-
 /************************************************************************/
 /* solution¿ØÖÆ                                                          */
 /************************************************************************/
@@ -83,25 +43,19 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 
 	CmdArgs * ca = CmdArgs::GetCmdArgs();
 
-	uint32_t wave_method = 2;
+	enTensileLayout = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TENSILE);
 	uint32_t mfma_pttn0 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MT0);
 	uint32_t mfma_pttn1 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MT1);
 	uint32_t wave_pttn0 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WT0);
 	uint32_t wave_pttn1 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WT1);
 	uint32_t depth_u = *(uint32_t*)ca->GetOneArg(GEMM_ARG_DU);
-	uint32_t enTensileLayout = *(uint32_t*)ca->GetOneArg(GEMM_ARG_TENSILE);
+	uint32_t lds_buffer_num = *(uint32_t*)ca->GetOneArg(GEMM_ARG_BUFFER);
 
-	//uint32_t mfma_pttn0 = 1;
-	//uint32_t mfma_pttn1 = 1;
-	//uint32_t wave_pttn0 = 1;
-	//uint32_t wave_pttn1 = 4;
-	//uint32_t depth_u = 64;
-	//uint32_t enTensileLayout = 0;
 
-	LOG("data type = %d", g_DataType);
+	LOG("lds buffer number = %d", lds_buffer_num);
+	LOG("loop unroll = %d", depth_u);
 	LOG("mfma pattern per wave  = [%d, %d]", mfma_pttn0, mfma_pttn1);
 	LOG("wave pattern per group = [%d, %d]", wave_pttn0, wave_pttn1);
-	LOG("loop unroll = %d", depth_u);
 
 	// get kernel parameters
 	if (g_DataType == 1)kernelParam.dataType = E_DataType::Fp32;
@@ -115,6 +69,7 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	kernelParam.wave_pttn_per_group[0] = wave_pttn0;
 	kernelParam.wave_pttn_per_group[1] = wave_pttn1;
 	kernelParam.DepthU = depth_u;
+	kernelParam.lds_buffer_num = lds_buffer_num;
 	kernelParam.dbgNum = g_debugDataNum;
 
 	// generate kernel source
@@ -137,19 +92,28 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	kernelWriter->SaveKernelString2File();
 
 	// get back kernel info
+	T_Dispatch disp = kernelWriter->GetDispatch();
+	dim disp_group_num = disp.global_size / disp.group_size;
 	std::string kernelName = kernelWriter->KernelName();
 	std::string kernelFile = kernelWriter->KernelFile();
+	LOG("group_size = [%d, %d, %d].", disp.group_size.x, disp.group_size.y, disp.group_size.z);
+	LOG("global_size = [%d, %d, %d].", disp.global_size.x, disp.global_size.y, disp.global_size.z);
+	LOG("group_num = [%d, %d, %d].", disp_group_num.x, disp_group_num.y, disp_group_num.z);
+	LOG("kernel name: " + kernelName);
+	LOG("kernel file: " + kernelFile);
 
 	// build up kernel obj
 	GpuRuntimeBase * rt = GpuRuntime::GetInstance();
 	GpuKernelBase * k = rt->CreateKernel((char*)kernelFile.c_str(), kernelName.c_str(), E_ProgramType::GAS_FILE);
+
+	if (enTensileLayout == true)
+		return E_ReturnState::SUCCESS;
 
 	if (k == nullptr)
 		return E_ReturnState::RTN_ERR;
 	kernels.push_back(k);
 
 	// set up framework to launch kernel
-	T_Dispatch disp = kernelWriter->GetDispatch();
 	dispatches.push_back(disp);
 	if (g_DataType == 1)
 	{
@@ -164,9 +128,8 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 		setParam(k, g_bfDataA, g_bfDataB, g_bfDataD, g_dbg_buff, M, N, K, StrideA0, StrideB0, StrideD0);
 	}
 
-	repeatTimes = 1;
-	if (g_passCpu == true)	repeatTimes = 10;
 	score.Calculation = 2.0 * M*N*K;
+	repeatTimes = *(uint32_t*)ca->GetOneArg(GEMM_ARG_LOOP);
 
 	if (g_DataType == 1)score.TheoryFlops = 1.0 * 758 * 256 * 120; // fp32
 	if (g_DataType == 3)score.TheoryFlops = 1.0 * 758 * 512 * 120; // bf16
@@ -175,7 +138,9 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 }
 E_ReturnState GemmMfmaAsmSolution::verifyResult()
 {
-	if (g_passCpu)
+	if (enTensileLayout == true)
+		return E_ReturnState::SUCCESS;
+	if (!g_cpuVerify)
 		return E_ReturnState::SUCCESS;
 
 	if (g_DataType == 2)
@@ -369,22 +334,18 @@ void GemmMfmaProblem::initDataMem()
 	M = *(uint32_t*)ca->GetOneArg(GEMM_ARG_M);
 	N = *(uint32_t*)ca->GetOneArg(GEMM_ARG_N);
 	K = *(uint32_t*)ca->GetOneArg(GEMM_ARG_K);
+	g_cpuVerify = *(uint32_t*)ca->GetOneArg(GEMM_ARG_VERIFY);
+
+
 	Padding = 32;
-
-	//g_DataType = 3;
-	//M = 512;
-	//N = 1024;
-	//K = 256;
-
 	StrideA0 = K + Padding;
 	StrideB0 = K + Padding;
 	StrideD0 = M + Padding;
 
+	LOG("data type = %d", g_DataType);
 	LOG("gemm size: M,N,K = %d, %d, %d.", M, N, K);
-
-	if ((M > 4096) || (K > 512))
-		g_passCpu = true;
-
+	LOG("stride: A,B,D = %d, %d, %d.", StrideA0, StrideB0, StrideD0);
+	
 	uint32_t lds_sz = (MAX_LDS_SIZE / GPR_SZ) * 1;
 
 	g_DataA = newRealData<float>("matrix-a", 2.4f, StrideA0, M);
@@ -406,7 +367,7 @@ void GemmMfmaProblem::initDataMem()
 		g_hfDataRef->SetMemType(E_MemType::Page);
 		g_dbg_buff_16to32 = newRealData<float>("debug-fp16", 55.55f, lds_sz);
 
-		if (g_passCpu)
+		if (!g_cpuVerify)
 			return;
 
 		pf32 = (float*)g_DataA->HstAddr();
@@ -438,7 +399,7 @@ void GemmMfmaProblem::initDataMem()
 		g_bfDataRef->SetMemType(E_MemType::Page);
 		g_dbg_buff_16to32 = newRealData<float>("debug-bf16 to fp32", 55.55f, lds_sz);
 
-		if (g_passCpu)
+		if (!g_cpuVerify)
 			return;
 
 		pf32 = (float*)g_DataA->HstAddr();
@@ -462,7 +423,7 @@ void GemmMfmaProblem::cpuCompute()
 {
 	ProblemCtrlBase::cpuCompute();
 
-	if (g_passCpu)
+	if (!g_cpuVerify)
 		return;
 
 	float * h_a = (float*)g_DataA->HstAddr();

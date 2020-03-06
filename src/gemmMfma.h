@@ -12,7 +12,7 @@ using namespace feifei;
 class GemmMfmaAsmSolution : public SolutionCtrlBase
 {
 public:
-	GemmMfmaAsmSolution() : SolutionCtrlBase("asm auto-gen") {}
+	GemmMfmaAsmSolution() : SolutionCtrlBase("2 wave auto-gen") {}
 
 protected:
 	E_ReturnState generateKernel();
@@ -41,7 +41,7 @@ protected:
 class GemmMfmaProblem : public ProblemCtrlBase
 {
 public:
-	GemmMfmaProblem() : ProblemCtrlBase("mfma gemm")
+	GemmMfmaProblem() : ProblemCtrlBase("mfma gemm tn")
 	{
 		solver = new GemmMfmaSolver();
 	}
