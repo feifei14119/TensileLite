@@ -15,8 +15,12 @@
 //		library path: /opt/rocm/lib
 //		link lib: hip_hcc
 // -----------------------------------------------------------------------------
-#define __HIP_PLATFORM_HCC__
-#include <hip/hip_runtime.h> // aka <hip/hcc_detail/hip_runtime.h>
+//#define __HIP_PLATFORM_HCC__
+//#include <hip/hip_runtime.h> // aka <hip/hcc_detail/hip_runtime.h>
+
+
+//#define HIP_PLATFORM 
+#include <hip/hip_hcc.h> // aka <hip/hcc_detail/hip_runtime.h>
 
 #if EN_ROC_FFT
 // rocfft:
@@ -91,8 +95,8 @@ namespace feifei
 		switch (error)
 		{
 		case hipSuccess:return "hipSuccess";
-		case hipErrorOutOfMemory:return "hipErrorOutOfMemory";
-		case hipErrorNotInitialized:return "hipErrorNotInitialized";
+		//case hipErrorOutOfMemory:return "hipErrorOutOfMemory";
+		//case hipErrorNotInitialized:return "hipErrorNotInitialized";
 		case hipErrorDeinitialized:return "hipErrorDeinitialized";
 		case hipErrorProfilerDisabled:return "hipErrorProfilerDisabled";
 		case hipErrorProfilerNotInitialized:return "hipErrorProfilerNotInitialized";
@@ -102,7 +106,7 @@ namespace feifei
 		case hipErrorInvalidImage:return "hipErrorInvalidImage";
 		case hipErrorInvalidContext:return "hipErrorInvalidContext";
 		case hipErrorContextAlreadyCurrent:return "hipErrorContextAlreadyCurrent";
-		case hipErrorMapFailed:return "hipErrorMapFailed";
+		//case hipErrorMapFailed:return "hipErrorMapFailed";
 		case hipErrorUnmapFailed:return "hipErrorUnmapFailed";
 		case hipErrorArrayIsMapped:return "hipErrorArrayIsMapped";
 		case hipErrorAlreadyMapped:return "hipErrorAlreadyMapped";
@@ -123,13 +127,13 @@ namespace feifei
 		case hipErrorSharedObjectInitFailed:return "hipErrorSharedObjectInitFailed";
 		case hipErrorOperatingSystem:return "hipErrorOperatingSystem";
 		case hipErrorSetOnActiveProcess:return "hipErrorSetOnActiveProcess";
-		case hipErrorInvalidHandle:return "hipErrorInvalidHandle";
+		//case hipErrorInvalidHandle:return "hipErrorInvalidHandle";
 		case hipErrorNotFound:return "hipErrorNotFound";
 		case hipErrorIllegalAddress:return "hipErrorIllegalAddress";
 		case hipErrorInvalidSymbol:return "hipErrorInvalidSymbol";
 		case hipErrorMissingConfiguration:return "hipErrorMissingConfiguration";
-		case hipErrorMemoryAllocation:return "hipErrorMemoryAllocation";
-		case hipErrorInitializationError:return "hipErrorInitializationError";
+		//case hipErrorMemoryAllocation:return "hipErrorMemoryAllocation";
+		//case hipErrorInitializationError:return "hipErrorInitializationError";
 		case hipErrorLaunchFailure:return "hipErrorLaunchFailure";
 		case hipErrorLaunchTimeOut:return "hipErrorLaunchTimeOut";
 		case hipErrorLaunchOutOfResources:return "hipErrorLaunchOutOfResources";
@@ -140,7 +144,7 @@ namespace feifei
 		case hipErrorInvalidDevicePointer:return "hipErrorInvalidDevicePointer";
 		case hipErrorInvalidMemcpyDirection:return "hipErrorInvalidMemcpyDirection";
 		case hipErrorUnknown:return "hipErrorUnknown";
-		case hipErrorInvalidResourceHandle:return "hipErrorInvalidResourceHandle";
+		//case hipErrorInvalidResourceHandle:return "hipErrorInvalidResourceHandle";
 		case hipErrorNotReady:return "hipErrorNotReady";
 		case hipErrorNoDevice:return "hipErrorNoDevice";
 		case hipErrorPeerAccessAlreadyEnabled:return "hipErrorPeerAccessAlreadyEnabled";
@@ -149,7 +153,7 @@ namespace feifei
 		case hipErrorRuntimeOther:return "hipErrorRuntimeOther";
 		case hipErrorHostMemoryAlreadyRegistered:return "hipErrorHostMemoryAlreadyRegistered";
 		case hipErrorHostMemoryNotRegistered:return "hipErrorHostMemoryNotRegistered";
-		case hipErrorMapBufferObjectFailed:return "hipErrorMapBufferObjectFailed";
+		//case hipErrorMapBufferObjectFailed:return "hipErrorMapBufferObjectFailed";
 		case hipErrorAssert:return "hipErrorAssert";
 		case hipErrorTbd:return "hipErrorTbd";
 		}

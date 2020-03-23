@@ -260,8 +260,8 @@ protected:
 		}
 		else
 		{
-			f_load_kernel_args();
-			/*s_args.clear();
+			//f_load_kernel_args();
+			s_args.clear();
 			uint32_t bias = 0;
 			T_Var s_arg;
 			T_Var zhanwei1 = newSgpr("pA");
@@ -294,7 +294,7 @@ protected:
 			s_args[1] = s_args[1] ^ 1;
 			s_args[2] = s_args[2] ^ 1;
 			s_args[4] = s_args[4] ^ 1;
-			s_args[8] = s_args[8] ^ 1;*/
+			s_args[8] = s_args[8] ^ 1;
 		}
 
 		// =======================================================================
@@ -664,9 +664,9 @@ private:
 			}
 			else
 			{
-				//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 0);
-				op2("s_mov_b32", s_a_dscp + 0, s_args[k_arg_pA] + 0);
-				op2("s_mov_b32", s_a_dscp + 1, s_args[k_arg_pA] + 1);
+				s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 0);
+				//op2("s_mov_b32", s_a_dscp + 0, s_args[k_arg_pA] + 0);
+				//op2("s_mov_b32", s_a_dscp + 1, s_args[k_arg_pA] + 1);
 			}
 			s_a_dscp = s_a_dscp ^ 1;
 			op2h("s_mov_b32", s_a_dscp + 2, 0x80000000);
@@ -827,9 +827,9 @@ private:
 			}
 			else
 			{
-				//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 4 * 2);
-				op2("s_mov_b32", s_b_dscp + 0, s_args[k_arg_pB] + 0);
-				op2("s_mov_b32", s_b_dscp + 1, s_args[k_arg_pB] + 1);
+				s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 4 * 2);
+				//op2("s_mov_b32", s_b_dscp + 0, s_args[k_arg_pB] + 0);
+				//op2("s_mov_b32", s_b_dscp + 1, s_args[k_arg_pB] + 1);
 			}
 			s_b_dscp = s_b_dscp ^ 1;
 			op2h("s_mov_b32", s_b_dscp + 2, 0x80000000);
@@ -985,9 +985,9 @@ private:
 			}
 			else
 			{
-				//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 4 * 4);
-				op2("s_mov_b32", s_d_dscp + 0, s_args[k_arg_pD] + 0);
-				op2("s_mov_b32", s_d_dscp + 1, s_args[k_arg_pD] + 1);
+				s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 4 * 4);
+				//op2("s_mov_b32", s_d_dscp + 0, s_args[k_arg_pD] + 0);
+				//op2("s_mov_b32", s_d_dscp + 1, s_args[k_arg_pD] + 1);
 			}
 			s_d_dscp = s_d_dscp ^ 1;
 			op2h("s_mov_b32", s_d_dscp + 2, 0x80000000);
