@@ -260,6 +260,7 @@ namespace feifei
 		DeviceHip * device;
 		hipModule_t module;		// 程序对象
 		hipFunction_t kernel;	// kernel对象
+		E_ReturnState createStatus;
 		
 		E_ReturnState creatKernelFromCppFile();
 		E_ReturnState creatKernelFromCppString();

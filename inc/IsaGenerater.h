@@ -140,6 +140,7 @@ namespace feifei
 			IsaArch = GpuRuntime::GetInstance()->Device()->DeviceInfo().Arch;
 
 			idleVar.type = E_VarType::Idle;
+			createStatus = E_ReturnState::SUCCESS;
 		}
 		std::string * GetKernelString()
 		{
@@ -149,6 +150,7 @@ namespace feifei
 	protected:
 		E_IsaArch IsaArch = E_IsaArch::Gfx900;
 		std::string kernelString;
+		E_ReturnState createStatus;
 
 		/************************************************************************/
 		/* 寄存器与变量操作                                                       */
@@ -702,7 +704,10 @@ namespace feifei
 		E_ReturnState ldsAllocByte(size_t groupLdsByte)
 		{
 			if (ldsByteCount + groupLdsByte > MAX_LDS_SIZE)
+			{
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
+			}
 			ldsByteCount += groupLdsByte;
 			return E_ReturnState::SUCCESS;
 		}
@@ -710,10 +715,14 @@ namespace feifei
 		{
 			size_t lds_size_byte = groupLdsDword * 4;
 			if (ldsByteCount + lds_size_byte > MAX_LDS_SIZE)
+			{
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
+			}
 			ldsByteCount += lds_size_byte;
 			return E_ReturnState::SUCCESS;
 		}
+		
 		/************************************************************************/
 		/* 通用函数		                                                        */
 		/************************************************************************/
@@ -1760,24 +1769,28 @@ namespace feifei
 			{
 				str.append("dest reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_base.type != E_VarType::Sgpr)
 			{
 				str.append("base addr reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_base.gpr.len != 2)
 			{
 				str.append("base addr reg not 64-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (getVarType(offset) == E_VarType::Vgpr)
 			{
 				str.append("offset reg are vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -1824,24 +1837,28 @@ namespace feifei
 			{
 				str.append("dest reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_base.type != E_VarType::Sgpr)
 			{
 				str.append("base addr reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_base.gpr.len != 2)
 			{
 				str.append("base addr reg not 64-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (getVarType(offset) == E_VarType::Vgpr)
 			{
 				str.append("offset reg are vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -1895,24 +1912,28 @@ namespace feifei
 			{
 				str.append("dest reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_addr.type != E_VarType::Sgpr)
 			{
 				str.append("base addr reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_addr.gpr.len != 2)
 			{
 				str.append("base addr reg not 64-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (getVarType(offset) == E_VarType::Vgpr)
 			{
 				str.append("offset reg are vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -1967,24 +1988,28 @@ namespace feifei
 			{
 				str.append("dest reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_addr.type != E_VarType::Sgpr)
 			{
 				str.append("base addr reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_addr.gpr.len != 2)
 			{
 				str.append("base addr reg not 64-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (getVarType(offset) == E_VarType::Vgpr)
 			{
 				str.append("offset reg are vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2080,6 +2105,7 @@ namespace feifei
 			{
 				str.append("dest reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((idx_en == true) || (off_en == true))
@@ -2088,6 +2114,7 @@ namespace feifei
 				{
 					str.append("offset and index reg not vgpr");
 					wrLine(str);
+					createStatus = E_ReturnState::RTN_ERR;
 					return E_ReturnState::RTN_ERR;
 				}
 			}
@@ -2095,30 +2122,35 @@ namespace feifei
 			{
 				str.append("buffer descriptor reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_desc.gpr.len != 4)
 			{
 				str.append("buffer descriptor reg not 4-dword");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			/*if (s_base_offset.type != E_VarType::Sgpr)
 			{
 				str.append("buffer obj base offset addr reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}*/
 			if (!((i_offset >= 0) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset is not 12-bit unsigned int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((num > 1) && (lds_en == true))
 			{
 				str.append("lds direct only support 1dword");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			
@@ -2204,6 +2236,7 @@ namespace feifei
 			{
 				str.append("dest reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((idx_en == true) || (off_en == true))
@@ -2212,6 +2245,7 @@ namespace feifei
 				{
 					str.append("offset and index reg not vgpr");
 					wrLine(str);
+					createStatus = E_ReturnState::RTN_ERR;
 					return E_ReturnState::RTN_ERR;
 				}
 			}
@@ -2219,24 +2253,28 @@ namespace feifei
 			{
 				str.append("buffer descriptor reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_desc.gpr.len != 4)
 			{
 				str.append("buffer descriptor reg not 4-dword");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			/*if (s_base_offset.type != E_VarType::Sgpr)
 			{
 				str.append("buffer obj base offset addr reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}*/
 			if (!((i_offset >= 0) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset is not 12-bit unsigned int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2304,12 +2342,14 @@ namespace feifei
 			{
 				str.append("load data error");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_offset_addr.type != E_VarType::Vgpr)
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_offset_addr.gpr.len != 2)
@@ -2322,12 +2362,14 @@ namespace feifei
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= 0) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2398,36 +2440,42 @@ namespace feifei
 			{
 				str.append("load data error");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_offset_addr.type != E_VarType::Vgpr)
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((v_offset_addr.gpr.len != 2)&&(is64AddrMode == true))
 			{
 				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dst.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((getVarType(s_addr) != E_VarType::Sgpr) && (getVarType(s_addr) != E_VarType::Off))
 			{
 				str.append("offset reg not sgpr nor off");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= -4096) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2492,30 +2540,35 @@ namespace feifei
 			{
 				str.append("load data error");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_offset_addr.type != E_VarType::Vgpr)
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_offset_addr.gpr.len != 2)
 			{
 				str.append("base addr reg not 64-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dat.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= 0) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2588,36 +2641,42 @@ namespace feifei
 			{
 				str.append("load data error");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_offset_addr.type != E_VarType::Vgpr)
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((v_offset_addr.gpr.len != 2) && (is64AddrMode == true))
 			{
 				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dat.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((getVarType(s_addr) != E_VarType::Sgpr) && (getVarType(s_addr) != E_VarType::Off))
 			{
 				str.append("offset reg not sgpr nor off");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= -4096) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2715,36 +2774,42 @@ namespace feifei
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((v_offset_addr.gpr.len != 2) && (is64AddrMode == true))
 			{
 				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dst.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dat.type != E_VarType::Vgpr)
 			{
 				str.append("data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((getVarType(s_addr) != E_VarType::Sgpr) && (getVarType(s_addr) != E_VarType::Off))
 			{
 				str.append("offset reg not sgpr nor off");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= -4096) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2812,30 +2877,35 @@ namespace feifei
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_addr.gpr.len != 2)
 			{
 				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dst.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dat.type != E_VarType::Vgpr)
 			{
 				str.append("data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= -4096) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -2923,36 +2993,42 @@ namespace feifei
 			{
 				str.append("base addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((v_offset_addr.gpr.len != 2) && (is64AddrMode == true))
 			{
 				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dst.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dat.type != E_VarType::Vgpr)
 			{
 				str.append("store data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if ((getVarType(s_addr) != E_VarType::Sgpr) && (getVarType(s_addr) != E_VarType::Off))
 			{
 				str.append("offset reg not sgpr nor off");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (!((i_offset >= -4096) && (i_offset <= 4095)))
 			{
 				str.append("imm_offset over 13-bit int");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -3004,12 +3080,14 @@ namespace feifei
 			{
 				str.append("dest reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_addr.type != E_VarType::Vgpr)
 			{
 				str.append("ds addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -3057,12 +3135,14 @@ namespace feifei
 			{
 				str.append("ds addr reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (v_dat.type != E_VarType::Vgpr)
 			{
 				str.append("data reg not vgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -3573,6 +3653,7 @@ namespace feifei
 			{
 				str.append("lgkmcnt is over 4-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			return E_ReturnState::SUCCESS;
@@ -3599,6 +3680,7 @@ namespace feifei
 			{
 				str.append("vmcnt is over 6-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			return E_ReturnState::SUCCESS;
@@ -3628,6 +3710,7 @@ namespace feifei
 			{
 				str.append("lgkmcnt is over 4-bit");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			return E_ReturnState::SUCCESS;
@@ -3732,18 +3815,21 @@ namespace feifei
 			{
 				str.append("buffer descriptor not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_desc.gpr.len != 4)
 			{
 				str.append("buffer descriptor not 4-dword");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			if (s_base.type != E_VarType::Sgpr)
 			{
 				str.append("buffer obj base address not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -3777,6 +3863,7 @@ namespace feifei
 			{
 				str.append("dest reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -3886,6 +3973,7 @@ namespace feifei
 			{
 				str.append("wave_id reg not sgpr");
 				wrLine(str);
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 
@@ -4097,6 +4185,7 @@ namespace feifei
 			}
 			else
 			{
+				createStatus = E_ReturnState::RTN_ERR;
 				return E_ReturnState::RTN_ERR;
 			}
 			return E_ReturnState::SUCCESS;

@@ -51,6 +51,9 @@ public:
 		ChkErr(writeContent());
 		ChkErr(writeMetadata());
 
+		if (createStatus != E_ReturnState::SUCCESS)
+			return E_ReturnState::RTN_ERR;
+
 		return E_ReturnState::SUCCESS;
 	}
 	void SaveKernelString2File()
@@ -277,6 +280,18 @@ protected:
 		if (sgprCountMax >= MAX_SGPR_COUNT)	return E_ReturnState::RTN_ERR;
 		if (vgprCountMax >= MAX_VGPR_COUNT)	return E_ReturnState::RTN_ERR;
 		if (ldsByteCount > MAX_LDS_SIZE)	return E_ReturnState::RTN_ERR;
+
+		static bool log_once = false;
+		if (log_once == false)
+		{
+			log_once = true;
+		}
+		else
+		{
+			LOG("sgpr usage = %d.", sgprCountMax);
+			LOG("vgpr usage = %d.", vgprCountMax);
+			LOG("lds  usage = %.3f(KB).", ldsByteCount / 1024.0);
+		}
 
 		return E_ReturnState::SUCCESS;
 	}

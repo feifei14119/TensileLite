@@ -40,7 +40,7 @@ namespace feifei
 		LOG("Elapsed time = " + fmtTime(elapsedTime));
 
 		score.ElapsedTime = elapsedTime;
-		score.TheoryFlops = 64 * 60 * 0.800 * 1000 * 1000 * 1000 * 2;
+		//score.TheoryFlops = 64 * 60 * 0.800 * 1000 * 1000 * 1000 * 2;
 		score.Flops = score.Calculation / score.ElapsedTime;
 		score.Performence = score.Flops / score.TheoryFlops;
 		LOG("Calculation = %.2f G", score.Calculation / 1000 / 1000 / 1000);

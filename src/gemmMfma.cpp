@@ -23,7 +23,6 @@ C:	______M_______
 static unsigned int g_debugDataNum = 1;
 static bool g_cpuVerify = true;
 uint32_t enTensileLayout = 0;
-uint32_t wave_method = 2;
 
 static uint32_t g_DataType; // 1=fp32; 2=fp16; 3=bf16
 static unsigned int M, N, K;
@@ -61,7 +60,6 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	if (g_DataType == 1)kernelParam.dataType = E_DataType::Fp32;
 	if (g_DataType == 2)kernelParam.dataType = E_DataType::Fp16;
 	if (g_DataType == 3)kernelParam.dataType = E_DataType::Bf16;
-	kernelParam.waveMethod = wave_method;
 	kernelParam.enTensileLayout = enTensileLayout;
 	kernelParam.M = M; kernelParam.N = N; kernelParam.K = K;
 	kernelParam.mfma_pttn_per_wave[0] = mfma_pttn0;
@@ -131,9 +129,12 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	score.Calculation = 2.0 * M*N*K;
 	repeatTimes = *(uint32_t*)ca->GetOneArg(GEMM_ARG_LOOP);
 
-	if (g_DataType == 1)score.TheoryFlops = 1.0 * 758 * 256 * 120; // fp32
-	if (g_DataType == 3)score.TheoryFlops = 1.0 * 758 * 512 * 120; // bf16
-	if (g_DataType == 2)score.TheoryFlops = 1.0 * 758 * 1024 * 120; // fp16
+	double sclk_mhz = 1289.0;
+	uint32_t cu_num = 120;
+	if (g_DataType == 1)score.TheoryFlops = sclk_mhz * cu_num * 256;  // fp32
+	if (g_DataType == 3)score.TheoryFlops = sclk_mhz * cu_num * 512;  // bf16
+	if (g_DataType == 2)score.TheoryFlops = sclk_mhz * cu_num * 1024; // fp16
+	score.TheoryFlops = score.TheoryFlops * 1000 * 1000;
 	return E_ReturnState::SUCCESS;
 }
 E_ReturnState GemmMfmaAsmSolution::verifyResult()

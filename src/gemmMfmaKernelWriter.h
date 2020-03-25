@@ -10,7 +10,6 @@ using namespace feifei;
 typedef struct T_GemmMfmaKernelParamType
 {
 	E_DataType dataType;
-	uint32_t waveMethod; // 1=1 wave; 2=2 wave
 	bool enTensileLayout;
 
 	uint32_t M, N, K;
@@ -311,15 +310,8 @@ protected:
 
 		// =======================================================================
 		// gemm body
-		// ======================================================================= 		
-		if (k_param.waveMethod == 1)
-		{
-			write_sigle_wave_program();
-		}
-		else
-		{
-			write_double_wave_program();
-		}
+		// =======================================================================
+		write_double_wave_program();
 
 		// =======================================================================
 		// free gpr 
@@ -513,19 +505,15 @@ protected:
 		else
 		{
 			kernelName += std::to_string(elem_num0_per_grp) + "x" + std::to_string(elem_num1_per_grp) + "x" + std::to_string(k_param.DepthU);
-			kernelName += "_" + std::to_string(k_param.waveMethod) + "wave";
+			kernelName += "_2wave";
 		}
 
-		if (k_param.waveMethod == 1)
-		{
-			group_sz = dim(math_wave_num_per_grp * WAVE_SIZE, 1, 1);
-			group_num = dim(k_param.M / elem_num0_per_grp, k_param.N / elem_num1_per_grp, 1);
-		}
-		else
-		{
-			group_sz = dim(math_wave_num_per_grp * WAVE_SIZE * 2, 1, 1);
-			group_num = dim(k_param.M / elem_num0_per_grp, k_param.N / elem_num1_per_grp, 1);
-		}
+		group_sz = dim(math_wave_num_per_grp * WAVE_SIZE * 2, 1, 1);
+		group_num = dim(k_param.M / elem_num0_per_grp, k_param.N / elem_num1_per_grp, 1);
+
+		if ((k_param.M % elem_num0_per_grp != 0) || (k_param.N % elem_num1_per_grp != 0))
+			return E_ReturnState::RTN_ERR;
+
 		global_sz = group_sz * group_num;
 		dispatch = T_Dispatch(global_sz, group_sz);
 
@@ -1140,7 +1128,7 @@ private:
 		move_to_next_glb_fetch();
 		switch_lds_write();
 		if (k_param.lds_buffer_num == 3)
-			s_wait_vmcnt(fetch_glb_waitcnt); 
+			s_wait_vmcnt(fetch_glb_waitcnt);
 		op0("s_barrier");
 	}
 
@@ -1525,6 +1513,9 @@ private:
 		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
 		mfma_mfma_pang_with_store();
+		
+		//mfma_mfma_pang();
+		//store_result();
 	}
 		
 	void fetch_loop2()
@@ -1606,7 +1597,7 @@ private:
 	//	op0("s_barrier");// fetch ready
 		math_lds_exit_loop();
 	}
-	
+
 	void fetch_loop3()
 	{
 		if (fetch_glb_waitcnt < 0)
@@ -1619,12 +1610,12 @@ private:
 		op2("s_mov_b32", s_a_lds_write, s_a_lds_write_0);
 		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_0);
 
-	//	fetch_glb_to_lds_test();
-	//	fetch_glb_to_lds_test();
-	//	return;
-		// =======================================================================
-		// enter loop
-		// =======================================================================
+		//	fetch_glb_to_lds_test();
+		//	fetch_glb_to_lds_test();
+		//	return;
+			// =======================================================================
+			// enter loop
+			// =======================================================================
 		fetch_glb_to_lds_enter_loop();	// fetch 0
 
 		// =======================================================================
@@ -1658,7 +1649,7 @@ private:
 		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
 		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
 		acc_mfma_d = newAgpr("mfma_d", mfma_dgpr_per_mfma * mfma_blk_per_wv);
-		
+
 		// =======================================================================
 		// init acc gpr
 		// =======================================================================
@@ -1669,12 +1660,12 @@ private:
 		op2("v_mov_b32", v_a_lds_read, v_a_lds_read_0);
 		op2("v_mov_b32", v_b_lds_read, v_b_lds_read_0);
 
-	//	math_lds_test();
-	//	math_lds_test();
-	//	return;
-		// =======================================================================
-		// enter loop
-		// =======================================================================
+		//	math_lds_test();
+		//	math_lds_test();
+		//	return;
+			// =======================================================================
+			// enter loop
+			// =======================================================================
 		op0("s_barrier"); // fetch 0 ready
 		read_lds_to_mfma_ping(0);
 
@@ -1698,6 +1689,82 @@ private:
 		// exit loop
 		// =======================================================================
 		math_lds_exit_loop();
+	}
+
+	void store_result()
+	{
+		delVar(v_mfma_a_ping);
+		delVar(v_mfma_b_ping);
+		delVar(v_mfma_a_pang);
+		delVar(v_mfma_b_pang);
+		v_rslt_d = newVgpr("rslt_d", mfma_dgpr_per_mfma, 2);
+		T_Var v_bf16_msk = newVgpr("bf16_msk");
+		op2h("v_mov_b32", v_bf16_msk, 0xffff0000);
+
+		op1("s_nop", 32);
+		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
+		{
+			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
+			{
+				uint32_t mfma_d_idx = (m + n * mfma_pttn0_per_wv) * mfma_dgpr_per_mfma;
+
+				for (uint32_t i = 0; i < mfma_dgpr_per_mfma; i++)
+				{
+					op2("v_accvgpr_read", v_rslt_d + i, (acc_mfma_d + (mfma_d_idx + i)) ^ 1);
+
+					if (k_param.dataType == E_DataType::Fp32) // fp32
+					{
+						op1("s_nop", 4);
+						if ((i + 1) % 4 == 0)
+						{
+							uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * (i / 4);
+
+							buffer_store_dword(glb_store_instr_dw_sz,
+								v_rslt_d + 4 * (i / 4),
+								v_d_store_offset + n,
+								s_d_dscp, 0, false, true,
+								instr_offset);
+						}
+					}
+					else if (k_param.dataType == E_DataType::Fp16) // fp16
+					{
+						op2("v_cvt_f16_f32", v_rslt_d + i, v_rslt_d + i);
+						if ((i + 1) % 2 == 0)
+						{
+							op3("v_pack_b32_f16", v_rslt_d + (i / 2), v_rslt_d + (i - 1), v_rslt_d + i);
+						}
+						if ((i + 1) % 4 == 0)
+						{
+							uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * (i / 4);
+
+							buffer_store_dword(glb_store_instr_dw_sz,
+								v_rslt_d + 2 * (i / 4),
+								v_d_store_offset + n,
+								s_d_dscp, 0, false, true,
+								instr_offset);
+						}
+					}
+					else if (k_param.dataType == E_DataType::Bf16) // bf16
+					{
+						if ((i + 1) % 2 == 0)
+						{
+							op3("v_lshrrev_b32", v_rslt_d + (i - 1), 16, v_rslt_d + (i - 1));
+							op4("v_and_or_b32", v_rslt_d + (i / 2), v_rslt_d + i, v_bf16_msk, v_rslt_d + (i - 1));
+						}
+						if ((i + 1) % 4 == 0)
+						{
+							uint32_t instr_offset = m * d_glb_step2 + d_glb_step1 * (i / 4);
+
+							buffer_store_dword(glb_store_instr_dw_sz,
+								v_rslt_d + 2 * (i / 4),
+								v_d_store_offset + n,
+								s_d_dscp, 0, false, true,
+								instr_offset);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// =======================================================================

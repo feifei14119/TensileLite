@@ -123,14 +123,15 @@ namespace feifei
 
 		device = (DeviceHip*)(RuntimeHip::GetInstance())->Device();
 
+		createStatus = E_ReturnState::RTN_ERR;
 		switch (type)
 		{
-		case E_ProgramType::CPP_FILE:	creatKernelFromCppFile();	break;
-		case E_ProgramType::CPP_STRING:	creatKernelFromCppString(); break;
-		case E_ProgramType::GAS_FILE:	creatKernelFromAsmFile();	break;
-		case E_ProgramType::GAS_STRING:	creatKernelFromAsmString(); break;
-		case E_ProgramType::BIN_FILE:	creatKernelFromBinFile();	break;
-		case E_ProgramType::BIN_ARRAY:	creatKernelFromBinArray();	break;
+		case E_ProgramType::CPP_FILE:	createStatus = creatKernelFromCppFile();	break;
+		case E_ProgramType::CPP_STRING:	createStatus = creatKernelFromCppString(); break;
+		case E_ProgramType::GAS_FILE:	createStatus = creatKernelFromAsmFile();	break;
+		case E_ProgramType::GAS_STRING:	createStatus = creatKernelFromAsmString(); break;
+		case E_ProgramType::BIN_FILE:	createStatus = creatKernelFromBinFile();	break;
+		case E_ProgramType::BIN_ARRAY:	createStatus = creatKernelFromBinArray();	break;
 		}
 	}
 	GpuKernelBase * KernelHip::NewCopy()
@@ -169,6 +170,8 @@ namespace feifei
 
 		if (k->kernel != nullptr)
 		{
+			if (k->createStatus != E_ReturnState::SUCCESS)
+				return nullptr;
 			dev->AddKernel(k);
 			return k;
 		}
