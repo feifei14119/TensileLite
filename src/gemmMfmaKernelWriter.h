@@ -557,11 +557,21 @@ private:
 			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
 			op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
 		}
-		if (math_wave_num_per_grp >= SIMD_PER_CU)
+		if (math_wave_num_per_grp == 4)
 		{
 		//	op2("s_mov_b32", s_wvid_in_grp, s_hw_simd_id);
 		//	op2("v_mov_b32", v_wvid_in_grp, s_hw_simd_id);
 			op3("s_and_b32", s_tmp1, 3, s_wvid_in_grp);
+			op2("s_mov_b32", s_wvid_in_grp, s_tmp1);
+			op2("v_mov_b32", v_wvid_in_grp, s_tmp1);
+			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
+			op3("v_add_u32", v_tid_x, v_tmp1, v_tid_in_wave);
+		}
+		if (math_wave_num_per_grp == 8)
+		{
+			//	op2("s_mov_b32", s_wvid_in_grp, s_hw_simd_id);
+			//	op2("v_mov_b32", v_wvid_in_grp, s_hw_simd_id);
+			op3("s_and_b32", s_tmp1, 7, s_wvid_in_grp);
 			op2("s_mov_b32", s_wvid_in_grp, s_tmp1);
 			op2("v_mov_b32", v_wvid_in_grp, s_tmp1);
 			op3("v_lshlrev_b32", v_tmp1, log2Int(WAVE_SIZE), v_wvid_in_grp);
