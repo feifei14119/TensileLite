@@ -705,6 +705,7 @@ namespace feifei
 		GEMM_ARG_WT0,
 		GEMM_ARG_WT1,
 		GEMM_ARG_DU,
+		GEMM_ARG_MFMA_MN,
 		GEMM_ARG_VERIFY,
 		GEMM_ARG_LOOP,
 		GEMM_ARG_BUFFER,
@@ -751,6 +752,7 @@ namespace feifei
 			addOneArg(GEMM_ARG_MT1, E_DataType::Int, "1", 's', "mfma-pttn1", "mfma times in n dim. (1)");
 			addOneArg(GEMM_ARG_WT0, E_DataType::Int, "1", 'x', "wave-pttn0", "wave number in m dim. (1)");
 			addOneArg(GEMM_ARG_WT1, E_DataType::Int, "1", 'y', "wave-pttn1", "wave number in n dim. (1)");
+			addOneArg(GEMM_ARG_MFMA_MN, E_DataType::Int, "32", 'z', "mfma-mn", "mfma instruction m/n width. (32)");
 			addOneArg(GEMM_ARG_DU, E_DataType::Int, "16", 'u', "depth-u", "k dim loop unroll. (16)");
 			addOneArg(GEMM_ARG_VERIFY, E_DataType::Int, "1", 'v', "verify", "enable cpu verify. (1)");
 			addOneArg(GEMM_ARG_LOOP, E_DataType::Int, "100", 'l', "loop", "loop times for perf test. (100)");

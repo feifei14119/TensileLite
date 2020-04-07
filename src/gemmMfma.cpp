@@ -49,7 +49,16 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	uint32_t wave_pttn1 = *(uint32_t*)ca->GetOneArg(GEMM_ARG_WT1);
 	uint32_t depth_u = *(uint32_t*)ca->GetOneArg(GEMM_ARG_DU);
 	uint32_t lds_buffer_num = *(uint32_t*)ca->GetOneArg(GEMM_ARG_BUFFER);
+	uint32_t mfma_mn = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MFMA_MN);
 
+	/*enTensileLayout = 0;
+	mfma_pttn0 = 1;
+	mfma_pttn1 = 1;
+	wave_pttn0 = 1;
+	wave_pttn1 = 1;
+	mfma_mn = 16;
+	depth_u = 16;
+	lds_buffer_num = 2;*/
 
 	LOG("lds buffer number = %d", lds_buffer_num);
 	LOG("loop unroll = %d", depth_u);
@@ -66,6 +75,7 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	kernelParam.mfma_pttn_per_wave[1] = mfma_pttn1;
 	kernelParam.wave_pttn_per_group[0] = wave_pttn0;
 	kernelParam.wave_pttn_per_group[1] = wave_pttn1;
+	kernelParam.mfma_mn = mfma_mn;
 	kernelParam.DepthU = depth_u;
 	kernelParam.lds_buffer_num = lds_buffer_num;
 	kernelParam.dbgNum = g_debugDataNum;
@@ -128,6 +138,7 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 
 	score.Calculation = 2.0 * M*N*K;
 	repeatTimes = *(uint32_t*)ca->GetOneArg(GEMM_ARG_LOOP);
+	//repeatTimes = 5;
 
 	double sclk_mhz = 1289.0;
 	uint32_t cu_num = 120;
@@ -337,8 +348,13 @@ void GemmMfmaProblem::initDataMem()
 	K = *(uint32_t*)ca->GetOneArg(GEMM_ARG_K);
 	g_cpuVerify = *(uint32_t*)ca->GetOneArg(GEMM_ARG_VERIFY);
 
+	/*g_DataType = 2;
+	M = 16;
+	N = 16;
+	K = 32;
+	g_cpuVerify = true;*/
 
-	Padding = 32;
+	Padding = 64;
 	StrideA0 = K + Padding;
 	StrideB0 = K + Padding;
 	StrideD0 = M + Padding;

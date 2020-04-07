@@ -37,7 +37,7 @@ def buildApp():
 	execCmd(cmd)
 	
 def testApp():	
-	cmd = '../TensileLite.out -m 960 -n 1024 -k 1024 -v 1 -l 10 -f 2 -r 1 -s 2 -x 2 -y 2 -u 32 -d 3'
+	cmd = '../TensileLite.out -m 960 -n 1024 -k 1024 -v 1 -l 10 -f 2 -r 1 -s 2 -x 2 -y 2 -z 32 -u 32 -d 3'
 	print(cmd)
 	execCmd(cmd)
 	

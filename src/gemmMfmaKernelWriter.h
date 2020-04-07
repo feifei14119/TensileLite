@@ -13,6 +13,7 @@ typedef struct T_GemmMfmaKernelParamType
 	bool enTensileLayout;
 
 	uint32_t M, N, K;
+	uint32_t mfma_mn;
 	uint32_t mfma_pttn_per_wave[2];
 	uint32_t wave_pttn_per_group[2];
 	uint32_t DepthU;	// loop unroll
@@ -28,30 +29,40 @@ public:
 		k_param = kernelParam;
 		dbg_buff_len = k_param.dbgNum;
 
+		k_param.mfma_mn = 16;
+		mfma_m = mfma_n = k_param.mfma_mn;
 		switch (k_param.dataType)
 		{
 		case E_DataType::Fp32:
 			elem_sz = FP32_SZ;
-			mfma_k = 2;
-			mfma_inst = "v_mfma_f32_32x32x2f32";
+			if (k_param.mfma_mn == 16)	mfma_k = 4;
+			if (k_param.mfma_mn == 32)	mfma_k = 2;
+			if (k_param.mfma_mn == 16)	mfma_inst = "v_mfma_f32_16x16x4f32";
+			if (k_param.mfma_mn == 32)	mfma_inst = "v_mfma_f32_32x32x2f32";
 			kernelName = "sgemm_col_TN_MT";
 			break;
 		case E_DataType::Fp16:
 			elem_sz = FP16_SZ;
-			mfma_k = 8;
-			mfma_inst = "v_mfma_f32_32x32x8f16";
+			if (k_param.mfma_mn == 16)	mfma_k = 16;
+			if (k_param.mfma_mn == 32)	mfma_k = 8;
+			if (k_param.mfma_mn == 16)	mfma_inst = "v_mfma_f32_16x16x16f16";
+			if (k_param.mfma_mn == 32)	mfma_inst = "v_mfma_f32_32x32x8f16";
 			kernelName = "hgemm_col_TN_MT";
 			break;
 		case E_DataType::Bf16:
 			elem_sz = BF16_SZ;
-			mfma_k = 4;
-			mfma_inst = "v_mfma_f32_32x32x4bf16";
+			if (k_param.mfma_mn == 16)	mfma_k = 8;
+			if (k_param.mfma_mn == 32)	mfma_k = 4;
+			if (k_param.mfma_mn == 16)	mfma_inst = "v_mfma_f32_16x16x8bf16";
+			if (k_param.mfma_mn == 32)	mfma_inst = "v_mfma_f32_32x32x4bf16";
 			kernelName = "bfgemm_col_TN_MT";
 			break;
 		default:
 			elem_sz = FP32_SZ;
-			mfma_k = 2;
-			mfma_inst = "v_mfma_f32_32x32x2f32";
+			if (k_param.mfma_mn == 16)	mfma_k = 4;
+			if (k_param.mfma_mn == 32)	mfma_k = 2;
+			if (k_param.mfma_mn == 16)	mfma_inst = "v_mfma_f32_16x16x4f32";
+			if (k_param.mfma_mn == 32)	mfma_inst = "v_mfma_f32_32x32x2f32";
 			kernelName = "sgemm_col_TN_MT";
 			break;
 		}
@@ -83,8 +94,8 @@ protected:
 	uint32_t lds_rd_instr_sz; // lds read/write size(Byte)
 
 	std::string mfma_inst;
-	uint32_t mfma_m = 32;
-	uint32_t mfma_n = 32;
+	uint32_t mfma_m;
+	uint32_t mfma_n;
 	uint32_t mfma_k;
 	uint32_t mfma_b = 1; // 目前不支持多block的mfma指令
 	uint32_t mfma_t = 4; // mfma结果每几行一组存放(目前恒为4)
@@ -512,6 +523,8 @@ protected:
 		group_num = dim(k_param.M / elem_num0_per_grp, k_param.N / elem_num1_per_grp, 1);
 
 		if ((k_param.M % elem_num0_per_grp != 0) || (k_param.N % elem_num1_per_grp != 0))
+			return E_ReturnState::RTN_ERR;
+		if((k_param.DepthU / mfma_k / 2.0) <= 1)
 			return E_ReturnState::RTN_ERR;
 
 		global_sz = group_sz * group_num;
@@ -1526,6 +1539,7 @@ private:
 
 		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
+		
 		mfma_mfma_pang_with_store();
 		
 		//mfma_mfma_pang();
