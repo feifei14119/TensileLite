@@ -22,6 +22,7 @@ C:	______M_______
 
 static unsigned int g_debugDataNum = 1;
 static bool g_cpuVerify = true;
+static bool g_dataInit = false;
 uint32_t enTensileLayout = 0;
 
 static uint32_t g_DataType; // 1=fp32; 2=fp16; 3=bf16
@@ -52,11 +53,11 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	uint32_t mfma_mn = *(uint32_t*)ca->GetOneArg(GEMM_ARG_MFMA_MN);
 
 	/*enTensileLayout = 0;
-	mfma_pttn0 = 1;
-	mfma_pttn1 = 1;
-	wave_pttn0 = 1;
-	wave_pttn1 = 1;
-	mfma_mn = 16;
+	mfma_pttn0 = 2;
+	mfma_pttn1 = 2;
+	wave_pttn0 = 2;
+	wave_pttn1 = 2;
+	mfma_mn = 32;
 	depth_u = 16;
 	lds_buffer_num = 2;*/
 
@@ -349,10 +350,13 @@ void GemmMfmaProblem::initDataMem()
 	g_cpuVerify = *(uint32_t*)ca->GetOneArg(GEMM_ARG_VERIFY);
 
 	/*g_DataType = 2;
-	M = 16;
-	N = 16;
-	K = 32;
-	g_cpuVerify = true;*/
+	M = 4096;
+	N = 4096;
+	K = 4096;
+	g_cpuVerify = false;*/
+
+	if (g_cpuVerify == true)
+		g_dataInit = true;
 
 	Padding = 64;
 	StrideA0 = K + Padding;
@@ -365,11 +369,11 @@ void GemmMfmaProblem::initDataMem()
 	
 	uint32_t lds_sz = (MAX_LDS_SIZE / GPR_SZ) * 1;
 
-	g_DataA = newRealData<float>("matrix-a", 2.4f, StrideA0, M);
-	g_DataB = newRealData<float>("matrix-b", -2.4f, StrideB0, N);
-	g_DataD = newRealData<float>("matrix-d", 0, StrideD0, N);
-	g_dbg_buff = newRealData<float>("debug-buffer", 55.55f, lds_sz);
-	g_DataRef = newRealData<float>("matrix-ref", -55.55, StrideD0, N);
+	g_DataA = newRealData<float>("matrix-a", 2.4f*(int)g_dataInit, StrideA0, M);
+	g_DataB = newRealData<float>("matrix-b", -2.4f*(int)g_dataInit, StrideB0, N);
+	g_DataD = newRealData<float>("matrix-d", 0.5f * (int)g_dataInit, StrideD0, N);
+	g_dbg_buff = newRealData<float>("debug-buffer", 55.55f*(int)g_dataInit, lds_sz);
+	g_DataRef = newRealData<float>("matrix-ref", -55.55f*(int)g_dataInit, StrideD0, N);
 	g_DataRef->SetMemType(E_MemType::Page);
 	
 	if (g_DataType == 2)
@@ -377,12 +381,12 @@ void GemmMfmaProblem::initDataMem()
 		float *pf32;
 		short *pf16;
 
-		g_hfDataA = newRealData<float>("matrix-a", 0, StrideA0 / 2, M);
-		g_hfDataB = newRealData<float>("matrix-b", 0, StrideB0 / 2, N);
-		g_hfDataD = newRealData<float>("matrix-d", 0, StrideD0 / 2, N);
-		g_hfDataRef = newRealData<float>("matrix-ref", -55.55f, StrideD0, N);
+		g_hfDataA = newRealData<float>("matrix-a", 0.5f*(int)g_dataInit, StrideA0 / 2, M);
+		g_hfDataB = newRealData<float>("matrix-b", 0.5f*(int)g_dataInit, StrideB0 / 2, N);
+		g_hfDataD = newRealData<float>("matrix-d", 0.5f*(int)g_dataInit, StrideD0 / 2, N);
+		g_hfDataRef = newRealData<float>("matrix-ref", -55.55f*(int)g_dataInit, StrideD0, N);
 		g_hfDataRef->SetMemType(E_MemType::Page);
-		g_dbg_buff_16to32 = newRealData<float>("debug-fp16", 55.55f, lds_sz);
+		g_dbg_buff_16to32 = newRealData<float>("debug-fp16", 55.55f*(int)g_dataInit, lds_sz);
 
 		if (!g_cpuVerify)
 			return;
@@ -409,12 +413,12 @@ void GemmMfmaProblem::initDataMem()
 		float *pf32;
 		short *bf16;
 
-		g_bfDataA = newRealData<float>("matrix-a", 0, StrideA0 / 2, M);
-		g_bfDataB = newRealData<float>("matrix-b", 0, StrideB0 / 2, N);
-		g_bfDataD = newRealData<float>("matrix-d", 0, StrideD0 / 2, N);
-		g_bfDataRef = newRealData<float>("matrix-ref", -55.55f, StrideD0, N);
+		g_bfDataA = newRealData<float>("matrix-a", 0.5f*(int)g_dataInit, StrideA0 / 2, M);
+		g_bfDataB = newRealData<float>("matrix-b", 0.5f*(int)g_dataInit, StrideB0 / 2, N);
+		g_bfDataD = newRealData<float>("matrix-d", 0.5f*(int)g_dataInit, StrideD0 / 2, N);
+		g_bfDataRef = newRealData<float>("matrix-ref", -55.55f*(int)g_dataInit, StrideD0, N);
 		g_bfDataRef->SetMemType(E_MemType::Page);
-		g_dbg_buff_16to32 = newRealData<float>("debug-bf16 to fp32", 55.55f, lds_sz);
+		g_dbg_buff_16to32 = newRealData<float>("debug-bf16 to fp32", 55.55f*(int)g_dataInit, lds_sz);
 
 		if (!g_cpuVerify)
 			return;

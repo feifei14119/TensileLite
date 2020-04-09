@@ -29,7 +29,6 @@ public:
 		k_param = kernelParam;
 		dbg_buff_len = k_param.dbgNum;
 
-		k_param.mfma_mn = 16;
 		mfma_m = mfma_n = k_param.mfma_mn;
 		switch (k_param.dataType)
 		{
@@ -454,6 +453,8 @@ protected:
 		a_fetch_wave_shape1 = WAVE_SIZE / a_fetch_wave_shape0;
 		a_fetch_ele_num1_per_wv = a_fetch_wave_shape1;
 		a_fetch_times = elem_num0_per_grp / math_wave_num_per_grp / a_fetch_ele_num1_per_wv;
+		if (a_fetch_times < 1)
+			return E_ReturnState::RTN_ERR;
 
 		a_lds_sz_per_wv_per_time = WAVE_SIZE * GPR_SZ + lds_pad_byte;
 		a_lds_sz_per_wv = a_lds_sz_per_wv_per_time * a_fetch_times;
@@ -468,6 +469,8 @@ protected:
 		b_fetch_wave_shape1 = WAVE_SIZE / b_fetch_wave_shape0;
 		b_fetch_ele_num1_per_wv = b_fetch_wave_shape1;
 		b_fetch_times = elem_num1_per_grp / math_wave_num_per_grp / b_fetch_ele_num1_per_wv;
+		if (b_fetch_times < 1)
+			return E_ReturnState::RTN_ERR;
 
 		b_lds_sz_per_wv_per_time = WAVE_SIZE * GPR_SZ + lds_pad_byte;
 		b_lds_sz_per_wv = b_lds_sz_per_wv_per_time * b_fetch_times;
@@ -524,7 +527,7 @@ protected:
 
 		if ((k_param.M % elem_num0_per_grp != 0) || (k_param.N % elem_num1_per_grp != 0))
 			return E_ReturnState::RTN_ERR;
-		if((k_param.DepthU / mfma_k / 2.0) <= 1)
+		if((k_param.DepthU / mfma_k / 2.0) < 1)
 			return E_ReturnState::RTN_ERR;
 
 		global_sz = group_sz * group_num;
@@ -1161,7 +1164,7 @@ private:
 
 		switch_lds_write();
 		move_to_next_glb_fetch();
-		if (k_param.lds_buffer_num == 3)
+		//if (k_param.lds_buffer_num == 3) // if set SQ_CONFIG 0x01180000
 			s_wait_vmcnt(fetch_glb_waitcnt);
 		op0("s_barrier");
 	}
@@ -1503,7 +1506,7 @@ private:
 		mfma_mfma_ping_with_lds_switch();
 
 		// wait pang n' math pang
-		if (k_param.lds_buffer_num == 3)
+		//if (k_param.lds_buffer_num == 3) // if set SQ_CONFIG 0x01180000
 			s_wait_lgkmcnt(0);
 		op0("s_barrier");
 		mfma_mfma_pang_with_read_lds();
