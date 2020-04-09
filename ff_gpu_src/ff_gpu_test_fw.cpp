@@ -166,15 +166,9 @@ namespace feifei
 		cpuCompute();
 		solver->RunSolver();
 
-		ffSleepSec(1);
+		ffSleepMS(1);
 	}
-	DataMem<cplx_fp32> * ProblemCtrlBase::newCplxData(std::string name, uint32_t dim0, uint32_t dim1, uint32_t dim2)
-	{
-		DataMem<cplx_fp32> * data_mem = InitCplxData(name, dim0, dim1, dim2);
-		DataMem<void*> * t_data = (DataMem<void*>*)data_mem;
-		dataMems.push_back(t_data);
-		return data_mem;
-	};
+	//DataMem<cplx_fp32> * ProblemCtrlBase::newCplxData(std::string name, uint32_t dim0, uint32_t dim1, uint32_t dim2)	{};
 	void ProblemCtrlBase::initDataMem() { LOG("Initialize DataMem."); }
 	void ProblemCtrlBase::cpuCompute() { LOG("Run CPU Calculate."); }
 

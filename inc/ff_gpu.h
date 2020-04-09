@@ -489,38 +489,14 @@ namespace feifei
 		}
 		E_ReturnState Dump(E_DataFormat fmt = E_DataFormat::Nomal, int fmtLen = 0, uint64_t startIdx = 0, uint64_t endIdx = 0, int numPerRow = 8)
 		{
-			if (mem_type == E_MemType::Dev)
-			{
-				GpuRuntimeBase * rt = GpuRuntime::GetInstance();
-				rt->MemCopyD2H(hst_addr, dev_addr, mem_size);
-			}
-			return dump_data_mem<DataType>(hst_addr, data_count, name, fmt, fmtLen, startIdx, endIdx, numPerRow);
+			return E_ReturnState::SUCCESS;
 		}
-		E_ReturnState DumpBin()
+		E_ReturnState DumpBin()	
 		{
-			if (mem_type == E_MemType::Dev)
-			{
-				GpuRuntimeBase * rt = GpuRuntime::GetInstance();
-				rt->MemCopyD2H(hst_addr, dev_addr, mem_size);
-			}
-			return dump_bin_mem<DataType>(hst_addr, name, data_count);
+			return E_ReturnState::SUCCESS;
 		}
 		E_ReturnState LoadBin(std::string file_name, uint64_t load_cnt = 0)
 		{
-			data_count = load_bin_mem<DataType>(&hst_addr, file_name, load_cnt);
-
-			if (data_count == 0)
-				return E_ReturnState::RTN_ERR;
-
-			mem_size = data_count * sizeof(DataType);
-
-			if (mem_type == E_MemType::Dev)
-			{
-				GpuRuntimeBase * rt = GpuRuntime::GetInstance();
-				if (dev_addr == nullptr)
-					dev_addr = rt->DevMalloc(mem_size);
-				rt->MemCopyH2D(dev_addr, hst_addr, mem_size);
-			}
 			return E_ReturnState::SUCCESS;
 		}
 
@@ -696,9 +672,9 @@ namespace feifei
 			LOG("Verify Success.");
 		}
 	}
-	extern void CompareDataMem(DataMem<cplx_fp32> * rslt, DataMem<cplx_fp32> * ref, uint64_t verify_len = 0);
+	//extern void CompareDataMem(DataMem<cplx_fp32> * rslt, DataMem<cplx_fp32> * ref, uint64_t verify_len = 0);
 	extern DataMem<float> * InitRealData(std::string name, float init_type, uint32_t dim0, uint32_t dim1 = 1, uint32_t dim2 = 1);
-	extern DataMem<cplx_fp32> * InitCplxData(std::string name, uint32_t dim0, uint32_t dim1 = 1, uint32_t dim2 = 1);
+	//extern DataMem<cplx_fp32> * InitCplxData(std::string name, uint32_t dim0, uint32_t dim1 = 1, uint32_t dim2 = 1);
 #pragma endregion
 
 #pragma region TEST_FW
@@ -814,7 +790,7 @@ namespace feifei
 			dataMems.push_back(t_data);
 			return data_mem;
 		}
-		DataMem<cplx_fp32> * newCplxData(std::string name, uint32_t dim0, uint32_t dim1 = 1, uint32_t dim2 = 1);
+		//DataMem<cplx_fp32> * newCplxData(std::string name, uint32_t dim0, uint32_t dim1 = 1, uint32_t dim2 = 1);
 
 		virtual void initDataMem();
 		virtual void cpuCompute();

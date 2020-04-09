@@ -348,17 +348,18 @@ void GemmMfmaProblem::initDataMem()
 	N = *(uint32_t*)ca->GetOneArg(GEMM_ARG_N);
 	K = *(uint32_t*)ca->GetOneArg(GEMM_ARG_K);
 	g_cpuVerify = *(uint32_t*)ca->GetOneArg(GEMM_ARG_VERIFY);
+	Padding = *(uint32_t*)ca->GetOneArg(GEMM_ARG_PAD);
 
 	/*g_DataType = 2;
 	M = 4096;
 	N = 4096;
 	K = 4096;
-	g_cpuVerify = false;*/
+	g_cpuVerify = false;
+	Padding = 64;*/
 
 	if (g_cpuVerify == true)
 		g_dataInit = true;
 
-	Padding = 64;
 	StrideA0 = K + Padding;
 	StrideB0 = K + Padding;
 	StrideD0 = M + Padding;

@@ -106,63 +106,37 @@ namespace feifei
 		mem->Log(E_DataFormat::Nomal, 1, 0, 31);
 		mem->Dump(E_DataFormat::Nomal, 2);
 	}
-	void CompareDataMem(DataMem<cplx_fp32> * rslt, DataMem<cplx_fp32> * ref, uint64_t verify_len)
-	{
-		LOG("Verify Operation Result: %s VS %s", rslt->Name().c_str(), ref->Name().c_str());
-		ref->Sync2Hst();
-		rslt->Sync2Hst();
-		if (memcmp(rslt->HstAddr(), ref->HstAddr(), ref->MemSize()) == 0)
-		{
-			LOG("Verify Memory Success.");
-			return;
-		}
-
-		verify_len = (verify_len == 0) ? ref->DataCount() : verify_len;
-		double total_diff = 0;
-		for (uint64_t i = 0; i < verify_len; i++)
-		{
-			total_diff += (((*ref)[i] - (*rslt)[i]) * ((*ref)[i] - (*rslt)[i])).abs();
-		}
-		double mean_diff = total_diff / ref->DataCount();
-
-		if (!(mean_diff >= 0 && mean_diff < MIN_FP32_ERR))
-		{
-			WARN("Verify Failed! total err = %f", total_diff);
-			WARN("Verify Failed! mean err = %f", mean_diff);
-		}
-		else
-		{
-			LOG("Verify Success.");
-		}
-	}
+	//void CompareDataMem(DataMem<cplx_fp32> * rslt, DataMem<cplx_fp32> * ref, uint64_t verify_len)	{}
 	DataMem<float> * InitRealData(std::string name, float init_type, uint32_t dim0, uint32_t dim1, uint32_t dim2)
 	{
 		float * h_x = (float*)malloc(dim0*dim1*dim2 * sizeof(float));
-
-		for (uint32_t bt = 0; bt < dim2; bt++)
+		if (init_type != 0)
 		{
-			for (uint32_t ch = 0; ch < dim1; ch++)
+			for (uint32_t bt = 0; bt < dim2; bt++)
 			{
-				float * _x = h_x + dim0 * (dim1 * bt + ch);
-
-				for (uint32_t i = 0; i < dim0; i++)
+				for (uint32_t ch = 0; ch < dim1; ch++)
 				{
-					uint32_t idx = dim0 * (dim1 * bt + ch) + i;
+					float * _x = h_x + dim0 * (dim1 * bt + ch);
 
-					if (init_type == 0) { _x[i] = 0; }
-					else if (init_type == 1.0f) { _x[i] = 1.0f; }
-					else if (init_type == 2.0f) { _x[i] = 1.0f * idx; }
-					else if (init_type == 2.1f) { _x[i] = 0.01f * (idx % 1137); }
-					else if (init_type == 2.2f) { _x[i] = (i + 1) * 0.01f + ch * 1.0f + bt * 100.0f; }
-					else if (init_type == 2.3f) { _x[i] = 0.1f * (idx % 17); }
-					else if (init_type == 2.4f) { _x[i] = 1.0f * (idx % 7); }
-					else if (init_type == -1.0f) { _x[i] = -1.0f; }
-					else if (init_type == -2.0f) { _x[i] = -1.0f * idx; }
-					else if (init_type == -2.1f) { _x[i] = -0.01f * (idx % 1137); }
-					else if (init_type == -2.2f) { _x[i] = (i + 1) * -0.01f + ch * -1.0f + bt * -100.0f; }
-					else if (init_type == -2.3f) { _x[i] = -0.1f * (idx % 17); }
-					else if (init_type == -2.4f) { _x[i] = -1.0f * (idx % 11); }
-					else { _x[i] = init_type; }
+					for (uint32_t i = 0; i < dim0; i++)
+					{
+						uint32_t idx = dim0 * (dim1 * bt + ch) + i;
+
+						if (init_type == 0.5f) { _x[i] = 0; }
+						else if (init_type == 1.0f) { _x[i] = 1.0f; }
+						else if (init_type == 2.0f) { _x[i] = 1.0f * idx; }
+						else if (init_type == 2.1f) { _x[i] = 0.01f * (idx % 1137); }
+						else if (init_type == 2.2f) { _x[i] = (i + 1) * 0.01f + ch * 1.0f + bt * 100.0f; }
+						else if (init_type == 2.3f) { _x[i] = 0.1f * (idx % 17); }
+						else if (init_type == 2.4f) { _x[i] = 1.0f * (idx % 7); }
+						else if (init_type == -1.0f) { _x[i] = -1.0f; }
+						else if (init_type == -2.0f) { _x[i] = -1.0f * idx; }
+						else if (init_type == -2.1f) { _x[i] = -0.01f * (idx % 1137); }
+						else if (init_type == -2.2f) { _x[i] = (i + 1) * -0.01f + ch * -1.0f + bt * -100.0f; }
+						else if (init_type == -2.3f) { _x[i] = -0.1f * (idx % 17); }
+						else if (init_type == -2.4f) { _x[i] = -1.0f * (idx % 11); }
+						else { _x[i] = init_type; }
+					}
 				}
 			}
 		}
@@ -172,30 +146,5 @@ namespace feifei
 		dm->SetMemType(E_MemType::Dev);
 		return dm;
 	}
-	DataMem<cplx_fp32> * InitCplxData(std::string name, uint32_t dim0, uint32_t dim1, uint32_t dim2)
-	{
-		cplx_fp32 * h_x = (cplx_fp32*)malloc(dim0*dim1*dim2 * sizeof(cplx_fp32));
-
-		for (uint32_t bt = 0; bt < dim2; bt++)
-		{
-			for (uint32_t ch = 0; ch < dim1; ch++)
-			{
-				cplx_fp32 * _x = h_x + dim0 * (dim1 * bt + ch);
-
-				for (uint32_t i = 0; i < dim0; i++)
-				{
-					_x[i].real = i * 0.01f + ch * 1.0f + bt * 100.0f;
-					_x[i].imag = i * -0.01f + ch * -1.0f + bt * -100.0f;
-					if (i == 0) _x[i].real = 3.14f;
-					if (i == 0) _x[i].imag = 2.71f;
-					//	_x[i].real = 1.0f;
-					//	_x[i].imag = 1.0f;
-				}
-			}
-		}
-		DataMem<cplx_fp32> * dm = new DataMem<cplx_fp32>(name, h_x, E_MemType::Page, dim0, dim1, dim2);
-		dm->Sync2Dev();
-		dm->SetMemType(E_MemType::Dev);
-		return dm;
-	}
+	//DataMem<cplx_fp32> * InitCplxData(std::string name, uint32_t dim0, uint32_t dim1, uint32_t dim2)	{}
 }

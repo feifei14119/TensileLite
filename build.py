@@ -15,11 +15,11 @@ def buildLibGpu():
 		print("remove ../lib/libff_gpu.a")
 		os.remove("../lib/libff_gpu.a")
 		
-	cmd = 'hipcc ../ff_gpu_src/ff_gpu.cpp ../ff_gpu_src/ff_hip_runtime.cpp ../ff_gpu_src/ff_gpu_test_fw.cpp -D"__GPU_RT_HIP"  -c -fPIC -O0 -w -std=c++11 -I"/opt/rocm/include/"'
+	cmd = 'hipcc ../ff_gpu_src/ff_gpu.cpp ../ff_gpu_src/ff_utils.cpp ../ff_gpu_src/ff_hip_runtime.cpp ../ff_gpu_src/ff_gpu_test_fw.cpp -D"__GPU_RT_HIP"  -c -fPIC -O0 -w -std=c++11 -I"/opt/rocm/include/"'
 	print(cmd)
 	execCmd(cmd)
 	
-	cmd = 'ar cr ../lib/libff_gpu.a ff_gpu.o ff_hip_runtime.o ff_gpu_test_fw.o'
+	cmd = 'ar cr ../lib/libff_gpu.a ff_gpu.o ff_hip_runtime.o ff_gpu_test_fw.o ff_utils.o'
 	print(cmd)
 	execCmd(cmd)
 	
@@ -32,7 +32,7 @@ def buildApp():
 	print(cmd)
 	execCmd(cmd)
 	
-	cmd = 'g++ -o ../TensileLite.out ./gemmMfma.o ./main.o ../lib/libff_gpu.a ../lib/libff_utils.a /opt/rocm/lib/libhip_hcc.so'
+	cmd = 'g++ -o ../TensileLite.out ./gemmMfma.o ./main.o ../lib/libff_gpu.a /opt/rocm/lib/libhip_hcc.so'
 	print(cmd)
 	execCmd(cmd)
 	
