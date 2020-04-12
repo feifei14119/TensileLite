@@ -1183,7 +1183,7 @@ private:
 		{
 			op3("v_add_u32", v_lds_read_cnt_bck, v_lds_read_cnt_bck, 1);
 			op3("v_cmp_eq_u32", "vcc", v_lds_read_cnt_bck, 3);
-			op4("v_cndmask_b32", v_lds_read_cnt, 0, v_lds_read_cnt_bck, "vcc");
+			op4("v_cndmask_b32", v_lds_read_cnt, v_lds_read_cnt_bck, 0, "vcc");
 			op2("v_mov_b32", v_lds_read_cnt_bck, v_lds_read_cnt);
 			op4("v_mad_u32_u24", v_a_lds_read, v_a_lds_read_2, v_lds_read_cnt, v_a_lds_read_0);
 			op4("v_mad_u32_u24", v_b_lds_read, v_b_lds_read_2, v_lds_read_cnt, v_b_lds_read_0);
