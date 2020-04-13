@@ -625,7 +625,7 @@ private:
 		{
 			fetch_loop2();
 		}
-		if (k_param.lds_buffer_num == 3)
+		if (k_param.lds_buffer_num >= 3)
 		{
 			fetch_loop3();
 		}
@@ -652,7 +652,7 @@ private:
 		{
 			math_loop2();
 		}
-		if (k_param.lds_buffer_num == 3)
+		if (k_param.lds_buffer_num >= 3)
 		{
 			math_loop3();
 		}
@@ -751,7 +751,7 @@ private:
 				op3("s_add_i32", s_a_lds_write_1, s_a_lds_write_0, a_lds_sz_per_grp); // lds_pang_addr = lds_ping_addr + lds_a_size_per_group
 				op3("s_xor_b32", s_a_lds_write_2, s_a_lds_write_0, s_a_lds_write_1);
 			}
-			else if (k_param.lds_buffer_num == 3)
+			else if (k_param.lds_buffer_num >= 3)
 			{
 				// ping pang buffer adderss (byte)
 				s_a_lds_write = newSgpr("a_lds_write");
@@ -817,7 +817,7 @@ private:
 				op3("v_add_u32", v_a_lds_read_1, a_lds_sz_per_grp, v_a_lds_read_0);
 				op3("v_xor_b32", v_a_lds_read_2, v_a_lds_read_1, v_a_lds_read_0);
 			}
-			else if (k_param.lds_buffer_num == 3)
+			else if (k_param.lds_buffer_num >= 3)
 			{
 				v_a_lds_read = newVgpr("a_lds_offset");
 				v_a_lds_read_0 = newVgpr("a_lds_offset");
@@ -929,7 +929,7 @@ private:
 				op3("s_add_i32", s_b_lds_write_1, s_b_lds_write_0, b_lds_sz_per_grp);
 				op3("s_xor_b32", s_b_lds_write_2, s_b_lds_write_0, s_b_lds_write_1);
 			}
-			else if (k_param.lds_buffer_num == 3)
+			else if (k_param.lds_buffer_num >= 3)
 			{
 				// ping pang buffer adderss (byte)
 				s_b_lds_write = newSgpr("b_lds_addr_ping");
@@ -991,7 +991,7 @@ private:
 				op3("v_add_u32", v_b_lds_read_1, b_lds_sz_per_grp, v_b_lds_read_0);
 				op3("v_xor_b32", v_b_lds_read_2, v_b_lds_read_1, v_b_lds_read_0);
 			}
-			else if (k_param.lds_buffer_num == 3)
+			else if (k_param.lds_buffer_num >= 3)
 			{
 				v_b_lds_read = newVgpr("a_lds_offset");
 				v_b_lds_read_0 = newVgpr("a_lds_offset");
@@ -1120,10 +1120,10 @@ private:
 			op3("s_xor_b32", s_a_lds_write_1, s_a_lds_write_2, s_a_lds_write);
 			op3("s_xor_b32", s_b_lds_write_1, s_b_lds_write_2, s_b_lds_write);
 		}
-		else if (k_param.lds_buffer_num == 3)
+		else if (k_param.lds_buffer_num >= 3)
 		{
 			op3("s_add_u32", s_lds_write_cnt_bck, s_lds_write_cnt_bck, 1);
-			op2("s_cmp_eq_i32", s_lds_write_cnt_bck, 3); // if(cnt_bck == 3) scc = 1;
+			op2("s_cmp_eq_i32", s_lds_write_cnt_bck, k_param.lds_buffer_num); // if(cnt_bck == 3) scc = 1;
 			op3("s_cselect_b32", s_lds_write_cnt, 0, s_lds_write_cnt_bck);
 			op2("s_mov_b32", s_lds_write_cnt_bck, s_lds_write_cnt);
 			op3("s_mul_i32", s_a_lds_write_1, s_a_lds_write_2, s_lds_write_cnt);
@@ -1179,10 +1179,10 @@ private:
 			op3("v_xor_b32", v_a_lds_read_1, v_a_lds_read_2, v_a_lds_read);
 			op3("v_xor_b32", v_b_lds_read_1, v_b_lds_read_2, v_b_lds_read);
 		}
-		else if (k_param.lds_buffer_num == 3)
+		else if (k_param.lds_buffer_num >= 3)
 		{
 			op3("v_add_u32", v_lds_read_cnt_bck, v_lds_read_cnt_bck, 1);
-			op3("v_cmp_eq_u32", "vcc", v_lds_read_cnt_bck, 3);
+			op3("v_cmp_eq_u32", "vcc", v_lds_read_cnt_bck, k_param.lds_buffer_num);
 			op4("v_cndmask_b32", v_lds_read_cnt, v_lds_read_cnt_bck, 0, "vcc");
 			op2("v_mov_b32", v_lds_read_cnt_bck, v_lds_read_cnt);
 			op4("v_mad_u32_u24", v_a_lds_read, v_a_lds_read_2, v_lds_read_cnt, v_a_lds_read_0);
@@ -1632,7 +1632,7 @@ private:
 	void fetch_loop3()
 	{
 		if (fetch_glb_waitcnt < 0)
-			fetch_glb_waitcnt = (a_fetch_times + b_fetch_times) * 1;
+			fetch_glb_waitcnt = (a_fetch_times + b_fetch_times) * (k_param.lds_buffer_num-2);
 		if (fetch_glb_waitcnt > 63)
 			fetch_glb_waitcnt = 63;
 
