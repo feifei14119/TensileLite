@@ -1,4 +1,6 @@
 # nohup python3 perf_test.py > test_log.txt 2>&1 &
+# jobs
+# kill %1
 import subprocess
 import os, re 
 import xlwt
