@@ -229,28 +229,28 @@ protected:
 			T_Var s_arg;
 
 			s_args.clear();
-		/*0*/	s_arg = newSgpr("SzC", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 0 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*1*/	s_arg = newSgpr("SzA", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 1 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*2*/	s_arg = newSgpr("SzB", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 2 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*3*/	s_arg = newSgpr("D", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 3 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*4*/	s_arg = newSgpr("C", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 4 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*5*/	s_arg = newSgpr("A", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 5 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*6*/	s_arg = newSgpr("B", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 6 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*7*/	s_arg = newSgpr("alpha");		/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 0);		*/s_args.push_back(s_arg);
-		/*8*/	s_arg = newSgpr("beta");		/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 1);		*/s_args.push_back(s_arg);
-		/*9*/	s_arg = newSgpr("StrideD0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 2);		*/s_args.push_back(s_arg);
-		/*10*/	s_arg = newSgpr("StrideD1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 3);		*/s_args.push_back(s_arg);
-		/*11*/	s_arg = newSgpr("StrideC0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 4);		*/s_args.push_back(s_arg);
-		/*12*/	s_arg = newSgpr("StrideC1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 5);		*/s_args.push_back(s_arg);
-		/*13*/	s_arg = newSgpr("StrideA0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 6);		*/s_args.push_back(s_arg);
-		/*14*/	s_arg = newSgpr("StrideA1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 7);		*/s_args.push_back(s_arg);
-		/*15*/	s_arg = newSgpr("StrideB0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 8);		*/s_args.push_back(s_arg);
-		/*16*/	s_arg = newSgpr("StrideB1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 9);		*/s_args.push_back(s_arg);
-		/*17*/	s_arg = newSgpr("I");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 10);		*/s_args.push_back(s_arg);
-		/*18*/	s_arg = newSgpr("J");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 11);		*/s_args.push_back(s_arg);
-		/*19*/	s_arg = newSgpr("K");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 12);		*/s_args.push_back(s_arg);
-		/*20*/	s_arg = newSgpr("sum");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 13);		*/s_args.push_back(s_arg);
-												/*															*/
+			/*0*/	s_arg = newSgpr("SzC", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 0 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*1*/	s_arg = newSgpr("SzA", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 1 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*2*/	s_arg = newSgpr("SzB", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 2 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*3*/	s_arg = newSgpr("D", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 3 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*4*/	s_arg = newSgpr("C", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 4 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*5*/	s_arg = newSgpr("A", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 5 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*6*/	s_arg = newSgpr("B", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 6 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*7*/	s_arg = newSgpr("alpha");		/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 0);		*/s_args.push_back(s_arg);
+			/*8*/	s_arg = newSgpr("beta");		/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 1);		*/s_args.push_back(s_arg);
+			/*9*/	s_arg = newSgpr("StrideD0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 2);		*/s_args.push_back(s_arg);
+			/*10*/	s_arg = newSgpr("StrideD1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 3);		*/s_args.push_back(s_arg);
+			/*11*/	s_arg = newSgpr("StrideC0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 4);		*/s_args.push_back(s_arg);
+			/*12*/	s_arg = newSgpr("StrideC1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 5);		*/s_args.push_back(s_arg);
+			/*13*/	s_arg = newSgpr("StrideA0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 6);		*/s_args.push_back(s_arg);
+			/*14*/	s_arg = newSgpr("StrideA1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 7);		*/s_args.push_back(s_arg);
+			/*15*/	s_arg = newSgpr("StrideB0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 8);		*/s_args.push_back(s_arg);
+			/*16*/	s_arg = newSgpr("StrideB1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 9);		*/s_args.push_back(s_arg);
+			/*17*/	s_arg = newSgpr("I");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 10);		*/s_args.push_back(s_arg);
+			/*18*/	s_arg = newSgpr("J");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 11);		*/s_args.push_back(s_arg);
+			/*19*/	s_arg = newSgpr("K");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 12);		*/s_args.push_back(s_arg);
+			/*20*/	s_arg = newSgpr("sum");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 13);		*/s_args.push_back(s_arg);
+			/*															*/
 			s_arg = newSgpr("dbg", 2, 2);		/*/*s_load_dword(2, s_arg, s_argsAddr, 8 * 3 + 4 * 0);		*/s_args.push_back(s_arg);
 			//s_wait_lgkmcnt(0);
 
@@ -258,8 +258,8 @@ protected:
 		//	s_load_dword(1, s_args[k_arg_M], s_argsAddr, 8 * 7 + 4 * 10);
 		//	s_load_dword(1, s_args[k_arg_N], s_argsAddr, 8 * 7 + 4 * 11);
 			s_load_dword(1, s_args[k_arg_StrideD0], s_argsAddr, 8 * 7 + 4 * 2);
-		//	s_load_dword(1, s_args[k_arg_StrideA0], s_argsAddr, 8 * 7 + 4 * 6);
-		//	s_load_dword(1, s_args[k_arg_StrideB0], s_argsAddr, 8 * 7 + 4 * 8);
+			//	s_load_dword(1, s_args[k_arg_StrideA0], s_argsAddr, 8 * 7 + 4 * 6);
+			//	s_load_dword(1, s_args[k_arg_StrideB0], s_argsAddr, 8 * 7 + 4 * 8);
 			s_load_dword(1, s_args[k_arg_K], s_argsAddr, 8 * 7 + 4 * 13);
 
 			s_args_tmp = newSgpr("args_tmp", 4, 4);
@@ -292,12 +292,12 @@ protected:
 		//	s_load_dword(4, s_args[0] ^ 4, s_argsAddr, bias); 
 			bias += 4 * 4;
 			// D/Dbg
-		//	s_load_dword(4, s_args[2] ^ 4, s_argsAddr, bias); 
+		//	s_load_dword(4, s_args[2] ^ 4, s_argsAddr, bias);
 			bias += 4 * 4;
 			// M/N/K/StrideA
 			s_load_dword(4, s_args[4] ^ 4, s_argsAddr, bias); bias += 4 * 4;
 			// StrideB/StrideD
-			s_load_dword(2, s_args[8] ^ 2, s_argsAddr, bias); 
+			s_load_dword(2, s_args[8] ^ 2, s_argsAddr, bias);
 
 			s_args[0] = s_args[0] ^ 1;
 			s_args[1] = s_args[1] ^ 1;
@@ -403,26 +403,22 @@ protected:
 			{
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 4;
-				lds_wr_instr_dw_sz = 1;
 				lds_rd_instr_dw_sz = 1;
 			}
 			else if (k_param.dataType == E_DataType::Fp16)
 			{
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 2;
-				lds_wr_instr_dw_sz = 1;
 				lds_rd_instr_dw_sz = 2;
 			}
 			else if (k_param.dataType == E_DataType::Bf16)
 			{
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 2;
-				lds_wr_instr_dw_sz = 1;
 				lds_rd_instr_dw_sz = 1;
 			}
 			glb_load_instr_sz = glb_load_instr_dw_sz * GPR_SZ;
 			glb_store_instr_sz = glb_store_instr_dw_sz * GPR_SZ;
-			lds_wr_instr_sz = lds_wr_instr_dw_sz * GPR_SZ;
 			lds_rd_instr_sz = lds_rd_instr_dw_sz * GPR_SZ;
 		}
 		else
@@ -527,7 +523,7 @@ protected:
 
 		if ((k_param.M % elem_num0_per_grp != 0) || (k_param.N % elem_num1_per_grp != 0))
 			return E_ReturnState::RTN_ERR;
-		if((k_param.DepthU / mfma_k / 2.0) < 1)
+		if ((k_param.DepthU / mfma_k / 2.0) < 1)
 			return E_ReturnState::RTN_ERR;
 
 		global_sz = group_sz * group_num;
@@ -575,8 +571,8 @@ private:
 		}
 		if (math_wave_num_per_grp == 4)
 		{
-		//	op2("s_mov_b32", s_wvid_in_grp, s_hw_simd_id);
-		//	op2("v_mov_b32", v_wvid_in_grp, s_hw_simd_id);
+			//	op2("s_mov_b32", s_wvid_in_grp, s_hw_simd_id);
+			//	op2("v_mov_b32", v_wvid_in_grp, s_hw_simd_id);
 			op3("s_and_b32", s_tmp1, 3, s_wvid_in_grp);
 			op2("s_mov_b32", s_wvid_in_grp, s_tmp1);
 			op2("v_mov_b32", v_wvid_in_grp, s_tmp1);
@@ -641,11 +637,11 @@ private:
 		// =======================================================================
 		for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
 			op2("v_accvgpr_write", acc_mfma_d + i, 0);
-		
+
 		s_wait_lgkmcnt(0);
 		address_a_t1();
 		address_b_n1();
-		address_d_n(); 
+		address_d_n();
 		s_wait_lgkmcnt(0);
 
 		if (k_param.lds_buffer_num == 2)
@@ -662,7 +658,7 @@ private:
 
 	// =======================================================================
 	// =======================================================================
-	
+
 	void address_a_t0()
 	{
 		// =======================================================================
@@ -1149,8 +1145,8 @@ private:
 		for (uint32_t i = 0; i < b_fetch_times; i++)
 			buffer_load_dword(1, v_tmp1, v_b_fetch_offset + i, s_b_dscp, 0, false, true, true, b_lds_sz_per_wv_per_time * i);
 
-		move_to_next_glb_fetch();
 		switch_lds_write();
+		move_to_next_glb_fetch();
 	}
 	void fetch_glb_to_lds_loop()
 	{
@@ -1164,8 +1160,7 @@ private:
 
 		switch_lds_write();
 		move_to_next_glb_fetch();
-		//if (k_param.lds_buffer_num == 3) // if set SQ_CONFIG 0x01180000
-			s_wait_vmcnt(fetch_glb_waitcnt);
+		s_wait_vmcnt(fetch_glb_waitcnt);
 		op0("s_barrier");
 	}
 
@@ -1507,7 +1502,7 @@ private:
 
 		// wait pang n' math pang
 		//if (k_param.lds_buffer_num == 3) // if set SQ_CONFIG 0x01180000
-			s_wait_lgkmcnt(0);
+		s_wait_lgkmcnt(0);
 		op0("s_barrier");
 		mfma_mfma_pang_with_read_lds();
 	}
@@ -1542,13 +1537,13 @@ private:
 
 		// wait pang n' math pang
 		s_wait_lgkmcnt(0);
-		
+
 		mfma_mfma_pang_with_store();
-		
+
 		//mfma_mfma_pang();
 		//store_result();
 	}
-		
+
 	void fetch_loop2()
 	{
 		fetch_glb_waitcnt = 0;
@@ -1556,7 +1551,7 @@ private:
 		lds_buffer_cnt = newSgpr("lds_buffer_cnt");
 		op2("s_mov_b32", lds_buffer_cnt, 0);
 		op2("s_mov_b32", s_a_lds_write, s_a_lds_write_0);
-		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_0);
+		op2("s_mov_b32", s_b_lds_write, s_b_lds_write_0);		
 
 		// =======================================================================
 		// enter loop
@@ -1588,13 +1583,6 @@ private:
 		v_mfma_b_ping = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
 		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
 		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
-		/*acc_mfma_d = newAgpr("mfma_d", mfma_dgpr_per_mfma * mfma_blk_per_wv);
-
-		// =======================================================================
-		// init acc gpr
-		// =======================================================================
-		for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
-			op2("v_accvgpr_write", acc_mfma_d + i, 0);*/
 
 		op1("s_setprio", 1);
 		op2("v_mov_b32", v_a_lds_read, v_a_lds_read_0);
@@ -1632,7 +1620,7 @@ private:
 	void fetch_loop3()
 	{
 		if (fetch_glb_waitcnt < 0)
-			fetch_glb_waitcnt = (a_fetch_times + b_fetch_times) * (k_param.lds_buffer_num-2);
+			fetch_glb_waitcnt = (a_fetch_times + b_fetch_times) * (k_param.lds_buffer_num - 2);
 		if (fetch_glb_waitcnt > 63)
 			fetch_glb_waitcnt = 63;
 
@@ -1650,6 +1638,10 @@ private:
 		// =======================================================================
 		// enter loop
 		// =======================================================================
+		uint32_t ext_loop_cnt = k_param.lds_buffer_num - 2;
+		if (k_param.K / k_param.DepthU < ext_loop_cnt)
+			ext_loop_cnt = k_param.K / k_param.DepthU;
+		
 		fetch_glb_to_lds_enter_loop();	// fetch 0
 
 		// =======================================================================
@@ -1657,9 +1649,9 @@ private:
 		// =======================================================================
 		T_Var l_end_fetch_loop = newLaber("END_FETCH_LOOP");
 		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU));
-		op2("s_cmp_le_u32", s_tmp1, 1); // if(loop_cnt <= 1) scc = 1;
+		op2("s_cmp_le_u32", s_tmp1, k_param.lds_buffer_num - 2); // if(loop_cnt <= 1) scc = 1;
 		op1("s_cbranch_scc1", l_end_fetch_loop);// if(scc == 1) no loop;
-		op3("s_sub_u32", s_tmp1, s_tmp1, 1);// sub enter and exit loop
+		op3("s_sub_u32", s_tmp1, s_tmp1, k_param.lds_buffer_num - 2);// sub enter and exit loop
 
 		T_Var s_fetch_loop_cnt = f_s_loop(s_tmp1, "FETCH_LOOP");
 		{
@@ -1671,7 +1663,14 @@ private:
 		// =======================================================================
 		// exit loop
 		// =======================================================================
-		s_wait_vmcnt(0); op0("s_barrier"); // fetch last ready
+		for (int i = 0; i < ext_loop_cnt; i++)
+		{
+			uint32_t waitcnt = (ext_loop_cnt - 1 - i) * fetch_glb_waitcnt;
+			if (waitcnt > 63)
+				waitcnt = 63;
+			s_wait_vmcnt(waitcnt);
+			op0("s_barrier"); // fetch last ready
+		}
 
 		delVar(s_lds_write_cnt);
 		delVar(s_lds_write_cnt_bck);
@@ -1685,13 +1684,6 @@ private:
 		v_mfma_b_ping = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
 		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
 		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
-		//acc_mfma_d = newAgpr("mfma_d", mfma_dgpr_per_mfma * mfma_blk_per_wv);
-
-		// =======================================================================
-		// init acc gpr
-		// =======================================================================
-		//for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
-		//	op2("v_accvgpr_write", acc_mfma_d + i, 0);
 
 		op1("s_setprio", 1);
 		op2("v_mov_b32", v_a_lds_read, v_a_lds_read_0);
