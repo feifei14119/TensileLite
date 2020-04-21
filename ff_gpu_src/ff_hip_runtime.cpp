@@ -204,9 +204,9 @@ namespace feifei
 
 		switch (device->DeviceInfo().Arch)
 		{
-		case E_IsaArch::Gfx803:buildOption = "-x assembler -target amdgcn--amdhsa -mcpu=gfx803 -mno-code-object-v3 "; break;
-		case E_IsaArch::Gfx900:buildOption = "-x assembler -target amdgcn--amdhsa -mcpu=gfx900 -mno-code-object-v3 "; break;
-		case E_IsaArch::Gfx906:buildOption = "-x assembler -target amdgcn--amdhsa -mcpu=gfx906 -mno-code-object-v3 "; break;
+		case E_IsaArch::Gfx803:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx803 -mno-code-object-v3 -c "; break;
+		case E_IsaArch::Gfx900:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx900 -mno-code-object-v3 -c "; break;
+		case E_IsaArch::Gfx906:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx906 -mno-code-object-v3 -c "; break;
 		case E_IsaArch::Gfx908:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx908 -mno-code-object-v3 -c "; break;
 		default:ERR("not support hardware.");
 		}

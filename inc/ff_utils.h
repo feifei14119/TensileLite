@@ -225,14 +225,14 @@ namespace feifei
 			else if (std::is_same<DataType, uint64_t>{} || std::is_same<DataType, int64_t>{})
 				fmtstr = (fmtLen == 0) ? "%lld" : "%0" + std::to_string(fmtLen) + "lld";
 			else if (std::is_same<DataType, float>{} || std::is_same < DataType, double>{})
-				fmtstr = (fmtLen == 0) ? "%.2f, " : "%." + std::to_string(fmtLen) + "f,";
+				fmtstr = (fmtLen == 0) ? "%.2f" : "%." + std::to_string(fmtLen) + "f";
 			//else if (std::is_same<DataType, cplx_fp32>{} || std::is_same < DataType, cmpx_fp64>{})
 				//fmtstr = (fmtLen == 0) ? "%.2f" : "%." + std::to_string(fmtLen) + "f";
 			else
 				fmtstr = "%f";
 		}
 		//if (!(std::is_same<DataType, cplx_fp32>{} || std::is_same < DataType, cmpx_fp64>{}))
-		//	fmtstr += ", ";
+		fmtstr += ", ";
 
 		int i = 0;
 		for (uint64_t idx = startIdx; idx <= endIdx; idx++, i++)

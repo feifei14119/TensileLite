@@ -47,10 +47,10 @@ namespace feifei
 		Cuda72 = 72,
 		Cuda75 = 75,
 
-		Gfx803 = 803,	// Fiji/MI8
-		Gfx900 = 900,	// Vega10/MI25
-		Gfx906 = 906,	// Vega20/MI50/MI60
-		Gfx908 = 908	// MI100
+		Gfx803 = 803,	// Fiji/米八
+		Gfx900 = 900,	// Vega10/米二五
+		Gfx906 = 906,	// Vega20/米五零/米六零
+		Gfx908 = 908	// 米一百
 	}E_IsaArch;
 	typedef enum class MemTypeEnum
 	{
