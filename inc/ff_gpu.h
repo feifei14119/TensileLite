@@ -589,7 +589,7 @@ namespace feifei
 
 		void * operator+(uint64_t idx)
 		{
-			return hst_addr + sizeof(DataType) * idx;
+			return (uint64_t)hst_addr + sizeof(DataType) * idx;
 		}
 		DataType operator[](uint64_t idx)
 		{

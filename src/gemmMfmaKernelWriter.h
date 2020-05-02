@@ -7,6 +7,8 @@ using namespace feifei;
 #define BF16_SZ	(2)
 #define FP16_SZ	(2)
 #define FP32_SZ	(4)
+
+#define PRE_LOAD_UTCL1	(0)
 typedef struct T_GemmMfmaKernelParamType
 {
 	E_DataType dataType;
@@ -77,34 +79,24 @@ protected:
 
 #pragma  region Variable
 	uint32_t elem_sz; // 每个元素多少BYTE
-	uint32_t lds_pad_dw;
-	uint32_t lds_pad_byte = 8; // LDS每行pad字节数
-	int32_t fetch_glb_waitcnt = -1;
-	int32_t write_lds_waitcnt = -1;
-	int32_t read_lds_waitcnt = -1;
 
-	bool en_dirct_glb_to_lds = false;
-	uint32_t glb_load_instr_dw_sz; // global load size(DWORD)
-	uint32_t glb_store_instr_dw_sz; // global stroe size(DWORD)
-	uint32_t lds_wr_instr_dw_sz; // lds write size(DWORD)
-	uint32_t lds_rd_instr_dw_sz; // lds read size(DWORD)
-	uint32_t glb_load_instr_sz; // global load/stroe size(Byte)
-	uint32_t glb_store_instr_sz; // global load/stroe size(Byte)
-	uint32_t lds_wr_instr_sz; // lds read/write size(Byte)
-	uint32_t lds_rd_instr_sz; // lds read/write size(Byte)
-	uint32_t lds_nopad_row_num;
-	uint32_t lds_wr_nopad_trd_num;
+	// -----------------------------------------------------------------------
+	// kernel argument
+	// -----------------------------------------------------------------------
+	uint32_t k_arg_pA;
+	uint32_t k_arg_pB;
+	uint32_t k_arg_pD;
+	uint32_t k_arg_pDbg;
+	uint32_t k_arg_M;
+	uint32_t k_arg_N;
+	uint32_t k_arg_K;
+	uint32_t k_arg_StrideA0;
+	uint32_t k_arg_StrideB0;
+	uint32_t k_arg_StrideD0;
+	T_Var s_args_tmp;
 
-	std::string mfma_inst;
-	uint32_t mfma_m;
-	uint32_t mfma_n;
-	uint32_t mfma_k;
-	uint32_t mfma_b = 1; // 目前不支持多block的mfma指令
-	uint32_t mfma_t = 4; // mfma结果每几行一组存放(目前恒为4)
-	uint32_t mfma_dgpr_per_mfma; // 每个thread结果寄存器的个数(可以从手册查到,也可以计算出)
-	uint32_t mfma_agpr_per_mfma; // 每个thread源寄存器的个数(可以从手册查到,也可以计算出)
-	uint32_t mfma_bgpr_per_mfma; // 每个thread源寄存器的个数(可以从手册查到,也可以计算出)
-
+	// -----------------------------------------------------------------------
+	// static reg
 	// -----------------------------------------------------------------------
 	T_Var v_tmp1, v_tmp2;
 	T_Var s_tmp1, s_tmp2;
@@ -116,24 +108,49 @@ protected:
 	// config
 	// -----------------------------------------------------------------------
 	uint32_t wave_num_per_simd;
-	uint32_t mfma_pttn0_per_wv;	// 每个wave在MT0方向负责做的mfma次数
-	uint32_t mfma_pttn1_per_wv;	// 每个wave在MT1方向负责做的mfma次数
-	uint32_t wv_pttn0_per_grp;	// 每个group内wave的排布,每个group内MT0方向wave个数
-	uint32_t wv_pttn1_per_grp;	// 每个group内wave的排布,每个group内MT1方向wave个数
+	uint32_t mfma_pttn0_per_wv;		// 每个wave在MT0方向负责做的mfma次数
+	uint32_t mfma_pttn1_per_wv;		// 每个wave在MT1方向负责做的mfma次数
+	uint32_t wv_pttn0_per_grp;		// 每个group内wave的排布,每个group内MT0方向wave个数
+	uint32_t wv_pttn1_per_grp;		// 每个group内wave的排布,每个group内MT1方向wave个数
+	uint32_t math_wave_num_per_grp; // 每个group总共的math wave数
 
 	// -----------------------------------------------------------------------
-	// workload
+	// global opt
 	// -----------------------------------------------------------------------
-	uint32_t math_wave_num_per_grp; // 每个group总共的math wave数
+	bool en_dirct_glb_to_lds = true;
+
+	int32_t fetch_glb_waitcnt = -1;
+	int32_t write_lds_waitcnt = -1;
+	int32_t read_lds_waitcnt = -1;
+
+	uint32_t glb_load_instr_dw_sz;	// global load size(DWORD)
+	uint32_t glb_store_instr_dw_sz; // global stroe size(DWORD)
+	uint32_t glb_load_instr_sz;		// global load/stroe size(Byte)
+	uint32_t glb_store_instr_sz;	// global load/stroe size(Byte)
+
+	// -----------------------------------------------------------------------
+	// lds opt
+	// -----------------------------------------------------------------------
+	uint32_t lds_wr_instr_dw_sz;	// lds write size(DWORD)
+	uint32_t lds_wr_instr_sz;		// lds read/write size(Byte)
+	uint32_t lds_rd_instr_dw_sz;	// lds read size(DWORD)
+	uint32_t lds_rd_instr_sz;		// lds read/write size(Byte)
+
+	uint32_t lds_pad_dw;
+	uint32_t lds_pad_byte;			// LDS每行pad字节数
+	uint32_t lds_nopad_row_num;
+	uint32_t lds_wr_nopad_trd_num;
+
+	T_Var s_lds_write_cnt, s_lds_write_cnt_bck;
+	T_Var v_lds_write_cnt, v_lds_write_cnt_bck;
+	T_Var v_lds_read_cnt, v_lds_read_cnt_bck;
 
 	// -----------------------------------------------------------------------
 	// matrix a
 	// -----------------------------------------------------------------------
 	T_Var s_a_dscp;
 	T_Var v_a_fetch_offset;
-	T_Var v_a_fetch_offset_ping;
-	T_Var v_a_fetch_offset_pang;
-	T_Var v_glb_load_a;
+	T_Var v_glb_load_addr_a, v_glb_load_a;
 	T_Var s_a_lds_write, s_a_lds_write_0, s_a_lds_write_1, s_a_lds_write_2;
 	T_Var v_a_lds_write, v_a_lds_write_0, v_a_lds_write_1, v_a_lds_write_2;
 	T_Var v_a_lds_read, v_a_lds_read_0, v_a_lds_read_1, v_a_lds_read_2;
@@ -154,9 +171,7 @@ protected:
 	// -----------------------------------------------------------------------
 	T_Var s_b_dscp;
 	T_Var v_b_fetch_offset;
-	T_Var v_b_fetch_offset_ping;
-	T_Var v_b_fetch_offset_pang;
-	T_Var v_glb_load_b;
+	T_Var v_glb_load_addr_b, v_glb_load_b;
 	T_Var s_b_lds_write, s_b_lds_write_0, s_b_lds_write_1, s_b_lds_write_2;
 	T_Var v_b_lds_write, v_b_lds_write_0, v_b_lds_write_1, v_b_lds_write_2;
 	T_Var v_b_lds_read, v_b_lds_read_0, v_b_lds_read_1, v_b_lds_read_2;
@@ -175,21 +190,28 @@ protected:
 	// -----------------------------------------------------------------------
 	// mfma
 	// -----------------------------------------------------------------------
-	T_Var v_mfma_a;
+	std::string mfma_inst;
+	uint32_t mfma_m;
+	uint32_t mfma_n;
+	uint32_t mfma_k;
+	uint32_t mfma_b = 1;			// 目前不支持多block的mfma指令
+	uint32_t mfma_t = 4;			// mfma结果每几行一组存放(目前恒为4)
+	uint32_t mfma_dgpr_per_mfma;	// 每个thread结果寄存器的个数(可以从手册查到,也可以计算出)
+	uint32_t mfma_agpr_per_mfma;	// 每个thread源寄存器的个数(可以从手册查到,也可以计算出)
+	uint32_t mfma_bgpr_per_mfma;	// 每个thread源寄存器的个数(可以从手册查到,也可以计算出)
 	T_Var v_mfma_a_ping, v_mfma_a_pang;
-	T_Var v_mfma_b;
 	T_Var v_mfma_b_ping, v_mfma_b_pang;
 	T_Var acc_mfma_d;
-	uint32_t mfma_blk0_per_grp; // 每个group在MT0方向需要mfma的次数
-	uint32_t mfma_blk1_per_grp; // 每个group在MT1方向需要mfma的次数
-	uint32_t mfma_k_times_per_wv; // 每个wave在k方向需要的次数(mfma结果累加)
-	uint32_t mfma_blk_per_wv;	// 每个wave在MT0*MT1方向需要的mfma次数和(mfma结果不累加)
-	uint32_t mfma_sz0_per_wv;	// 每个wave得到的MT0方向的结果个数(element)
-	uint32_t mfma_sz1_per_wv;	// 每个wave得到的MT1方向的结果个数(element)
-	uint32_t elem_num0_per_grp;	// 每个group得到的MT0方向的结果个数(element) = MT0
-	uint32_t elem_num1_per_grp;	// 每个group得到的MT1方向的结果个数(element) = MT1
-	uint32_t a_mfma_times; // 一次fetch可以做mfma的总次数
-	uint32_t b_mfma_times; // 一次fetch可以做mfma的总次数
+	uint32_t mfma_blk0_per_grp;		// 每个group在MT0方向需要mfma的次数
+	uint32_t mfma_blk1_per_grp;		// 每个group在MT1方向需要mfma的次数
+	uint32_t mfma_k_times_per_wv;	// 每个wave在k方向需要的次数(mfma结果累加)
+	uint32_t mfma_blk_per_wv;		// 每个wave在MT0*MT1方向需要的mfma次数和(mfma结果不累加)
+	uint32_t mfma_sz0_per_wv;		// 每个wave得到的MT0方向的结果个数(element)
+	uint32_t mfma_sz1_per_wv;		// 每个wave得到的MT1方向的结果个数(element)
+	uint32_t elem_num0_per_grp;		// 每个group得到的MT0方向的结果个数(element) = MT0
+	uint32_t elem_num1_per_grp;		// 每个group得到的MT1方向的结果个数(element) = MT1
+	uint32_t a_mfma_times;			// 一次fetch可以做mfma的总次数
+	uint32_t b_mfma_times;			// 一次fetch可以做mfma的总次数
 
 	// -----------------------------------------------------------------------
 	// matrix d
@@ -200,20 +222,6 @@ protected:
 	uint32_t d_glb_step1;
 	uint32_t d_glb_step2;
 	uint32_t mfma_dgpr_tt_sz;
-	
-	uint32_t k_arg_pA;
-	uint32_t k_arg_pB;
-	uint32_t k_arg_pD;
-	uint32_t k_arg_pDbg;
-	uint32_t k_arg_M;
-	uint32_t k_arg_N;
-	uint32_t k_arg_K;
-	uint32_t k_arg_StrideA0;
-	uint32_t k_arg_StrideB0;
-	uint32_t k_arg_StrideD0;
-
-	T_Var s_args_tmp;
-
 #pragma endregion
 
 	E_ReturnState writeProgramDetail()
@@ -250,8 +258,8 @@ protected:
 			//s_wait_lgkmcnt(0);
 
 
-		//	s_load_dword(1, s_args[k_arg_M], s_argsAddr, 8 * 7 + 4 * 10);
-		//	s_load_dword(1, s_args[k_arg_N], s_argsAddr, 8 * 7 + 4 * 11);
+			//	s_load_dword(1, s_args[k_arg_M], s_argsAddr, 8 * 7 + 4 * 10);
+			//	s_load_dword(1, s_args[k_arg_N], s_argsAddr, 8 * 7 + 4 * 11);
 			s_load_dword(1, s_args[k_arg_StrideD0], s_argsAddr, 8 * 7 + 4 * 2);
 			//	s_load_dword(1, s_args[k_arg_StrideA0], s_argsAddr, 8 * 7 + 4 * 6);
 			//	s_load_dword(1, s_args[k_arg_StrideB0], s_argsAddr, 8 * 7 + 4 * 8);
@@ -321,7 +329,7 @@ protected:
 		// =======================================================================
 		// free gpr 
 		// =======================================================================
-		//free_gprs();
+		free_gprs();
 
 		return E_ReturnState::SUCCESS;
 	}
@@ -400,19 +408,23 @@ protected:
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 4;
 				lds_rd_instr_dw_sz = 1;
+				lds_pad_dw = 2;
 			}
 			else if (k_param.dataType == E_DataType::Fp16)
 			{
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 2;
 				lds_rd_instr_dw_sz = 2;
+				lds_pad_dw = 2;
 			}
 			else if (k_param.dataType == E_DataType::Bf16)
 			{
 				glb_load_instr_dw_sz = 1;
 				glb_store_instr_dw_sz = 2;
 				lds_rd_instr_dw_sz = 1;
+				lds_pad_dw = 2;
 			}
+			lds_pad_byte = lds_pad_dw * GPR_SZ;
 			glb_load_instr_sz = glb_load_instr_dw_sz * GPR_SZ;
 			glb_store_instr_sz = glb_store_instr_dw_sz * GPR_SZ;
 			lds_rd_instr_sz = lds_rd_instr_dw_sz * GPR_SZ;
@@ -674,11 +686,14 @@ private:
 			s_args_tmp = s_args_tmp ^ 4;
 			delVar(s_args_tmp);
 		}
+
 		addr_at_0();
-		addr_at_1();
 		addr_bn_0();
+		addr_at_1();
 		addr_bn_1();
-		s_wait_lgkmcnt(0);
+
+		s_wait_cnt0();
+		op0("s_barrier"); // fetch 0 ready
 		
 		fetch_loop();
 
@@ -743,6 +758,18 @@ private:
 			op3("v_lshlrev_b32", v_a_wv_row_id_in_grp, log2Int(a_fetch_ele_num1_per_wv), s_wvid_in_grp);
 		}
 
+		// ---------------------------------------------------------------------
+#if PRE_LOAD_UTCL1
+		s_wait_lgkmcnt(0);
+		T_Var v_a_preload_offset = newVgpr("2mb_offset");
+		op3("v_add_u32", v_a_preload_offset, s_a_grp_row_id_base, v_a_wv_row_id_in_grp);
+		op3("v_mul_lo_u32", v_a_preload_offset, s_args[k_arg_StrideA0], v_a_preload_offset);
+		op3("v_lshlrev_b32", v_a_preload_offset, log2Int(elem_sz), v_a_preload_offset);
+		buffer_load_dword(1, v_tmp1, v_a_preload_offset, s_a_dscp, 0, false, true, false, 0);
+		delVar(v_a_preload_offset);
+#endif
+		// ---------------------------------------------------------------------
+
 		// thread row & col in wave (element)
 		T_Var v_a_trd_row_id_in_wv = newVgpr("a_trd_row_id_in_wv");
 		T_Var v_a_trd_col_id_in_wv = newVgpr("a_trd_col_id_in_wv");
@@ -778,14 +805,6 @@ private:
 
 		if (en_dirct_glb_to_lds == false)
 			v_glb_load_a = newVgpr("glb_a", a_fetch_times*glb_load_instr_sz, glb_load_instr_sz);
-
-		/*s_wait_lgkmcnt(0);
-		s_a_dscp = s_a_dscp ^ 1;
-		v_glb_load_addr_a = newVgpr("glb_load_addr_a", 2, 2);
-		op2("v_mov_b32", v_glb_load_addr_a + 1, s_a_dscp + 1);
-		v_addc_u32(v_glb_load_addr_a, s_a_dscp, v_a_fetch_offset);
-		v_addc_co_u32(v_glb_load_addr_a + 1, 0, v_glb_load_addr_a + 1);
-		s_a_dscp = s_a_dscp ^ 4;*/
 
 		//f_debug_data(s_args[3], v_a_row_base_addr, true);
 		delVar(s_a_grp_row_id_base);
@@ -972,6 +991,17 @@ private:
 		{
 			op3("v_lshlrev_b32", v_b_wv_row_id_in_grp, log2Int(b_fetch_ele_num1_per_wv), s_wvid_in_grp);
 		}
+
+		// ---------------------------------------------------------------------
+#if PRE_LOAD_UTCL1
+		T_Var v_b_preload_offset = newVgpr("2mb_offset");
+		op3("v_add_u32", v_b_preload_offset, s_b_grp_row_id_base, v_b_wv_row_id_in_grp);
+		op3("v_mul_lo_u32", v_b_preload_offset, s_args[k_arg_StrideB0], v_b_preload_offset);
+		op3("v_lshlrev_b32", v_b_preload_offset, log2Int(elem_sz), v_b_preload_offset);
+		buffer_load_dword(1, v_tmp1, v_b_preload_offset, s_b_dscp, 0, false, true, false, 0);
+		delVar(v_b_preload_offset);
+#endif
+		// ---------------------------------------------------------------------
 
 		// thread row & col in wave (element)
 		T_Var v_b_trd_row_id_in_wv = newVgpr("b_trd_row_id_in_wv");
@@ -1261,7 +1291,7 @@ private:
 			delVar(v_d_glb_step3);
 		}
 	}
-
+	
 	// =======================================================================
 	void fetch_loop()
 	{
@@ -1271,6 +1301,8 @@ private:
 			write_lds_waitcnt = 63;
 		if ((en_dirct_glb_to_lds == false) && (write_lds_waitcnt > 15))
 			write_lds_waitcnt = 15;
+
+		write_lds_waitcnt = 0;
 
 		if (en_dirct_glb_to_lds)
 		{
@@ -1286,15 +1318,27 @@ private:
 		}
 
 		//	fetch_glb_to_lds_test();
-		//	fetch_glb_to_lds_test();
 		//	return;
 		// =======================================================================
-		// enter loop
+		// iteration times
 		// =======================================================================
 		uint32_t ext_loop_cnt = k_param.lds_buffer_num - 2;
 		if (k_param.K / k_param.DepthU < ext_loop_cnt)
 			ext_loop_cnt = k_param.K / k_param.DepthU;
 
+		T_Var s_loop_cnt = newSgpr("LOOP_CNT");
+		T_Var l_end_fetch_loop = newLaber("END_FETCH_LOOP");
+		op3("s_lshr_b32", s_loop_cnt, s_args[k_arg_K], log2Int(k_param.DepthU));
+		if (k_param.lds_buffer_num > 2)
+		{
+			op2("s_cmp_le_u32", s_loop_cnt, k_param.lds_buffer_num - 2); // if(loop_cnt <= 1) scc = 1;
+			op1("s_cbranch_scc1", l_end_fetch_loop);// if(scc == 1) no loop;
+			op3("s_sub_u32", s_loop_cnt, s_loop_cnt, k_param.lds_buffer_num - 2);// sub enter and exit loop
+		}
+
+		// =======================================================================
+		// enter loop
+		// =======================================================================
 		for (int i = 0; i < ext_loop_cnt; i++)
 		{
 			if (en_dirct_glb_to_lds)
@@ -1310,16 +1354,7 @@ private:
 		// =======================================================================
 		// loop
 		// =======================================================================
-		T_Var l_end_fetch_loop = newLaber("END_FETCH_LOOP");
-		op3("s_lshr_b32", s_tmp1, s_args[k_arg_K], log2Int(k_param.DepthU));
-		if (k_param.lds_buffer_num > 2)
-		{
-			op2("s_cmp_le_u32", s_tmp1, k_param.lds_buffer_num - 2); // if(loop_cnt <= 1) scc = 1;
-			op1("s_cbranch_scc1", l_end_fetch_loop);// if(scc == 1) no loop;
-			op3("s_sub_u32", s_tmp1, s_tmp1, k_param.lds_buffer_num - 2);// sub enter and exit loop
-		}
-
-		T_Var s_fetch_loop_cnt = f_s_loop(s_tmp1, "FETCH_LOOP");
+		T_Var s_fetch_loop_cnt = f_s_loop(s_loop_cnt, "FETCH_LOOP");
 		{
 			if (en_dirct_glb_to_lds)
 			{
@@ -1336,6 +1371,7 @@ private:
 		}
 		f_e_loop(s_fetch_loop_cnt, "FETCH_LOOP");
 		wrLaber(l_end_fetch_loop);
+		delVar(s_loop_cnt);
 
 		// =======================================================================
 		// exit loop
@@ -1360,8 +1396,6 @@ private:
 		}
 	}
 
-	T_Var s_lds_write_cnt, s_lds_write_cnt_bck;
-	T_Var v_lds_write_cnt, v_lds_write_cnt_bck;
 	void switch_lds_write()
 	{
 		if (en_dirct_glb_to_lds)
@@ -1410,17 +1444,11 @@ private:
 	{
 		for (uint32_t i = 0; i < a_fetch_times; i++)
 			op3("v_add_u32", v_a_fetch_offset + i, k_param.DepthU * elem_sz, v_a_fetch_offset + i);
-
-		//v_glb_load_addr_a = v_glb_load_addr_a ^ 1;
-		//v_addc_u32(v_glb_load_addr_a, k_param.DepthU * elem_sz, v_glb_load_addr_a);
-		//v_addc_co_u32(v_glb_load_addr_a + 1, 0, v_glb_load_addr_a + 1);
-		//v_glb_load_addr_a = v_glb_load_addr_a ^ 2;
-
+		
 		for (uint32_t i = 0; i < b_fetch_times; i++)
 			op3("v_add_u32", v_b_fetch_offset + i, k_param.DepthU * elem_sz, v_b_fetch_offset + i);
 	}
 	
-	T_Var v_glb_load_addr_a, v_glb_load_addr_b;
 	void fetch_glb_to_gpr_loop()
 	{
 		//flat_load_dword(glb_load_instr_dw_sz, v_glb_load_a, v_glb_load_addr_a ^ 2, "off");
@@ -1464,6 +1492,10 @@ private:
 		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
 		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
 
+		s_lds_write_cnt = newSgpr("lds_write_cnt");
+		s_lds_write_cnt_bck = newSgpr("lds_write_cnt_bck");
+		op2("s_mov_b32", s_lds_write_cnt_bck, 0);
+
 		op1("s_setprio", 1);
 		if (k_param.lds_buffer_num > 2)
 		{
@@ -1473,12 +1505,12 @@ private:
 		}
 
 		//	math_lds_test();
-		//	math_lds_test();
 		//	return;
 		// =======================================================================
 		// enter loop
 		// =======================================================================
 		op0("s_barrier"); // fetch 0 ready
+
 		read_lds_to_mfma_ping(0);
 
 		// =======================================================================
@@ -1503,7 +1535,6 @@ private:
 		math_lds_exit_loop();
 	}
 
-	T_Var v_lds_read_cnt, v_lds_read_cnt_bck;
 	void switch_lds_read()
 	{
 		if (k_param.lds_buffer_num == 2)
@@ -1960,6 +1991,7 @@ private:
 			}
 		}
 	}
+	
 	void free_fetch_gprs()
 	{
 		delVar(s_a_dscp);

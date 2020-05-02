@@ -46,9 +46,11 @@ sudo chmod +s ./umr
 
 do these steps after installing..
 
+// old
 sudo ./umr -i 1 -w arcturus.gfx90.mmSQ_CONFIG 0x01180000
 sudo ./umr -i 1 -w arcturus.gfx90.mmSQC_CONFIG 0x010a2000
 
+// new
 sudo ./umr -i 1 -w arcturus.gfx90.mmSQ_CONFIG 0x01180001
 sudo ./umr -i 1 -w arcturus.gfx90.mmSQC_CONFIG 0x020a2000
 
