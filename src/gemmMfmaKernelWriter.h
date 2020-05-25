@@ -8,7 +8,7 @@ using namespace feifei;
 #define FP16_SZ	(2)
 #define FP32_SZ	(4)
 
-#define PRE_LOAD_UTCL1	(0)
+#define PRE_LOAD_UTCL1	(1)
 typedef struct T_GemmMfmaKernelParamType
 {
 	E_DataType dataType;
@@ -693,7 +693,9 @@ private:
 		addr_bn_1();
 
 		s_wait_cnt0();
+#if PRE_LOAD_UTCL1
 		op0("s_barrier"); // fetch 0 ready
+#endif
 		
 		fetch_loop();
 
@@ -765,7 +767,7 @@ private:
 		op3("v_add_u32", v_a_preload_offset, s_a_grp_row_id_base, v_a_wv_row_id_in_grp);
 		op3("v_mul_lo_u32", v_a_preload_offset, s_args[k_arg_StrideA0], v_a_preload_offset);
 		op3("v_lshlrev_b32", v_a_preload_offset, log2Int(elem_sz), v_a_preload_offset);
-		buffer_load_dword(1, v_tmp1, v_a_preload_offset, s_a_dscp, 0, false, true, false, 0);
+		buffer_load_dword(1, v_tmp2, v_a_preload_offset, s_a_dscp, 0, false, true, false, 0);
 		delVar(v_a_preload_offset);
 #endif
 		// ---------------------------------------------------------------------
@@ -994,11 +996,12 @@ private:
 
 		// ---------------------------------------------------------------------
 #if PRE_LOAD_UTCL1
-		T_Var v_b_preload_offset = newVgpr("2mb_offset");
+		s_wait_lgkmcnt(0);
+		T_Var v_b_preload_offset = newVgpr("2mb_offsetb");
 		op3("v_add_u32", v_b_preload_offset, s_b_grp_row_id_base, v_b_wv_row_id_in_grp);
 		op3("v_mul_lo_u32", v_b_preload_offset, s_args[k_arg_StrideB0], v_b_preload_offset);
 		op3("v_lshlrev_b32", v_b_preload_offset, log2Int(elem_sz), v_b_preload_offset);
-		buffer_load_dword(1, v_tmp1, v_b_preload_offset, s_b_dscp, 0, false, true, false, 0);
+		buffer_load_dword(1, v_tmp2, v_b_preload_offset, s_b_dscp, 0, false, true, false, 0);
 		delVar(v_b_preload_offset);
 #endif
 		// ---------------------------------------------------------------------
@@ -1510,7 +1513,7 @@ private:
 		// enter loop
 		// =======================================================================
 		op0("s_barrier"); // fetch 0 ready
-
+		
 		read_lds_to_mfma_ping(0);
 
 		// =======================================================================
