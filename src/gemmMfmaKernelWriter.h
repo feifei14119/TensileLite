@@ -694,7 +694,7 @@ private:
 
 		s_wait_cnt0();
 #if PRE_LOAD_UTCL1
-		op0("s_barrier"); // fetch 0 ready
+		op0("s_barrier"); // pre-load ready
 #endif
 		
 		fetch_loop();
@@ -717,6 +717,9 @@ private:
 		addr_bn_2();
 		addr_dn();
 		s_wait_lgkmcnt(0);
+#if PRE_LOAD_UTCL1
+		op0("s_barrier"); // pre-load ready
+#endif
 
 		math_loop();
 
