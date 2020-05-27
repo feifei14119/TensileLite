@@ -8,7 +8,7 @@ using namespace feifei;
 #define FP16_SZ	(2)
 #define FP32_SZ	(4)
 
-#define PRE_LOAD_UTCL1	(1)
+#define PRE_LOAD_UTCL1	(0)
 typedef struct T_GemmMfmaKernelParamType
 {
 	E_DataType dataType;
@@ -1308,8 +1308,6 @@ private:
 		if ((en_dirct_glb_to_lds == false) && (write_lds_waitcnt > 15))
 			write_lds_waitcnt = 15;
 
-		write_lds_waitcnt = 0;
-
 		if (en_dirct_glb_to_lds)
 		{
 			s_lds_write_cnt = newSgpr("lds_write_cnt");
@@ -1540,7 +1538,7 @@ private:
 		// =======================================================================
 		math_lds_exit_loop();
 	}
-
+	
 	void switch_lds_read()
 	{
 		if (k_param.lds_buffer_num == 2)
