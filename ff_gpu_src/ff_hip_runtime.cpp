@@ -119,7 +119,7 @@ namespace feifei
 
 		programType = type;
 		this->kernelName = kernelName;
-		kernelFile = RuntimeHip::GetInstance()->KernelTempDir() + DIR_SPT + get_file_name(programFile) + ".o";
+		kernelFile = RuntimeHip::GetInstance()->KernelTempDir() + get_file_name(programFile) + ".o";
 
 		device = (DeviceHip*)(RuntimeHip::GetInstance())->Device();
 
@@ -204,14 +204,14 @@ namespace feifei
 
 		switch (device->DeviceInfo().Arch)
 		{
-		case E_IsaArch::Gfx803:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx803 -mno-code-object-v3 -c "; break;
-		case E_IsaArch::Gfx900:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx900 -mno-code-object-v3 -c "; break;
-		case E_IsaArch::Gfx906:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx906 -mno-code-object-v3 -c "; break;
-		case E_IsaArch::Gfx908:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx908 -mno-code-object-v3 -c "; break;
+		case E_IsaArch::Gfx803:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx803 -mcode-object-v3 -c "; break;
+		case E_IsaArch::Gfx900:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx900 -mcode-object-v3 -c "; break;
+		case E_IsaArch::Gfx906:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx906 -mcode-object-v3 -c "; break;
+		case E_IsaArch::Gfx908:buildOption = "-x assembler -target amdgcn-amd-amdhsa -mcpu=gfx908 -mcode-object-v3 -c "; break;
 		default:ERR("not support hardware.");
 		}
 
-		std::string tmpfile = kernelFile + ".tmp";
+		std::string tmpfile = RuntimeHip::GetInstance()->KernelTempDir() + get_file_name(programFile) + ".co";
 
 		std::string cmd = compiler + " " + buildOption + "-o " + tmpfile + " " + programFile;
 		exec_cmd(cmd);

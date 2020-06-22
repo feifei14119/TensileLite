@@ -252,15 +252,7 @@ protected:
 			/*14*/	s_arg = newSgpr("StrideA1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 7);		*/s_args.push_back(s_arg);
 			/*15*/	s_arg = newSgpr("StrideB0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 8);		*/s_args.push_back(s_arg);
 			/*16*/	s_arg = newSgpr("StrideB1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 9);		*/s_args.push_back(s_arg);
-			/*17*/	s_arg = newSgpr("I");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 10);		*/s_args.push_back(s_arg);
-			/*18*/	s_arg = newSgpr("J");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 11);		*/s_args.push_back(s_arg);
-			/*19*/	s_arg = newSgpr("K");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 12);		*/s_args.push_back(s_arg);
-			/*20*/	s_arg = newSgpr("sum");			/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 13);		*/s_args.push_back(s_arg);
-			/*															*/
-			s_arg = newSgpr("dbg", 2, 2);		/*/*s_load_dword(2, s_arg, s_argsAddr, 8 * 3 + 4 * 0);		*/s_args.push_back(s_arg);
-			//s_wait_lgkmcnt(0);
-
-
+#if 0
 			//	s_load_dword(1, s_args[argidxM], s_argsAddr, 8 * 7 + 4 * 10);
 			//	s_load_dword(1, s_args[argidx_N], s_argsAddr, 8 * 7 + 4 * 11);
 			s_load_dword(1, s_args[argidx_StrD0], s_argsAddr, 8 * 7 + 4 * 2);
@@ -271,11 +263,12 @@ protected:
 			s_args_tmp = newSgpr("args_tmp", 4, 4);
 			s_load_dword(4, s_args_tmp, s_argsAddr, 8 * 7 + 4 * 6);
 			s_args_tmp = s_args_tmp ^ 1;
+#endif
+			f_load_kernel_args();
 
 		}
 		else
 		{
-			f_load_kernel_args();
 #if 0
 			s_args.clear();
 			uint32_t bias = 0;
@@ -324,6 +317,7 @@ protected:
 			s_args[argidx_Alpha] = s_args[argidx_Alpha] ^ 1;
 			s_args[argidx_Beta] = s_args[argidx_Beta] ^ 1;
 #endif
+			f_load_kernel_args();
 		}
 
 		// =======================================================================
@@ -427,16 +421,18 @@ protected:
 			//tensor2dSizeB = 23;
 			//staggerUIter = 24;
 
+			argidx_D = 3;
+			argidx_C = 4;
 			argidx_A = 5;
 			argidx_B = 6;
-			argidx_D = 3;
+			argidx_Alpha = 7;	argidx_Beta = 8;
+			argidx_StrD0 = 9;	argidx_BtStrD = 10;			
+			argidx_StrC0 = 11;	argidx_BtStrC = 12;
+			argidx_StrA0 = 13;	argidx_BtStrA = 14;
+			argidx_StrB0 = 15;	argidx_BtStrB = 16;
 			argidx_M = 17;
 			argidx_N = 18;
 			argidx_K = 20;
-			argidx_StrA0 = 13;
-			argidx_StrB0 = 15;
-			argidx_StrD0 = 9;
-			argidx_DbgBuff = 21;
 		}
 		else
 		{
@@ -531,13 +527,13 @@ private:
 	void fetch_wave()
 	{
 		s_wait_lgkmcnt(0);
-		if (k_param.enTensileLayout == true)
+		/*if (k_param.enTensileLayout == true)
 		{
 			op2("s_mov_b32", s_args[argidx_StrA0], s_args_tmp + 0);
 			op2("s_mov_b32", s_args[argidx_StrB0], s_args_tmp + 2);
 			s_args_tmp = s_args_tmp ^ 4;
 			delVar(s_args_tmp);
-		}
+		}*/
 
 		addr_at_1();
 		addr_bn_1();
@@ -642,15 +638,15 @@ private:
 		s_a_dscp = newSgpr("dscr_a", 4, 4);
 		if (k_param.enTensileLayout == true)
 		{
-			s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 8 * 5 + 4 * 0);
+			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 8 * 5 + 4 * 0);
 		}
 		else
 		{
 			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 0);
-			op2("s_mov_b32", s_a_dscp + 0, s_args[argidx_A] + 0);
-			op2("s_mov_b32", s_a_dscp + 1, s_args[argidx_A] + 1);
 		}
 		s_a_dscp = s_a_dscp ^ 1;
+		op2("s_mov_b32", s_a_dscp + 0, s_args[argidx_A] + 0);
+		op2("s_mov_b32", s_a_dscp + 1, s_args[argidx_A] + 1);
 		op2h("s_mov_b32", s_a_dscp + 2, 0x80000000);
 		op2h("s_mov_b32", s_a_dscp + 3, 0x00020000);
 		s_a_dscp = s_a_dscp ^ 4;
@@ -937,15 +933,15 @@ private:
 		s_b_dscp = newSgpr("dscr_b", 4, 4);
 		if (k_param.enTensileLayout == true)
 		{
-			s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 8 * 6 + 4 * 0);
+			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 8 * 6 + 4 * 0);
 		}
 		else
 		{
 			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 4 * 2);
-			op2("s_mov_b32", s_b_dscp + 0, s_args[argidx_B] + 0);
-			op2("s_mov_b32", s_b_dscp + 1, s_args[argidx_B] + 1);
 		}
 		s_b_dscp = s_b_dscp ^ 1;
+		op2("s_mov_b32", s_b_dscp + 0, s_args[argidx_B] + 0);
+		op2("s_mov_b32", s_b_dscp + 1, s_args[argidx_B] + 1);
 		op2h("s_mov_b32", s_b_dscp + 2, 0x80000000);
 		op2h("s_mov_b32", s_b_dscp + 3, 0x00020000);
 		s_b_dscp = s_b_dscp ^ 4;
@@ -1272,15 +1268,15 @@ private:
 		s_d_dscp = newSgpr("dscr_d", 4, 4);
 		if (k_param.enTensileLayout == true)
 		{
-			s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 8 * 3 + 4 * 0);
+			//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 8 * 3 + 4 * 0);
 		}
 		else
 		{
 			//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 4 * 4);
-			op2("s_mov_b32", s_d_dscp + 0, s_args[argidx_D] + 0);
-			op2("s_mov_b32", s_d_dscp + 1, s_args[argidx_D] + 1);
 		}
 		s_d_dscp = s_d_dscp ^ 1;
+		op2("s_mov_b32", s_d_dscp + 0, s_args[argidx_D] + 0);
+		op2("s_mov_b32", s_d_dscp + 1, s_args[argidx_D] + 1);
 		op2h("s_mov_b32", s_d_dscp + 2, 0x80000000);
 		op2h("s_mov_b32", s_d_dscp + 3, 0x00020000);
 		s_d_dscp = s_d_dscp ^ 4;
@@ -1533,10 +1529,10 @@ private:
 		if (read_lds_waitcnt < 0)
 			read_lds_waitcnt = mfma_pttn0_per_wv + mfma_pttn1_per_wv;
 
-		v_mfma_a_ping = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
-		v_mfma_b_ping = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
-		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * a_mfma_times);
-		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * b_mfma_times);
+		v_mfma_a_ping = newVgpr("mfma_a", mfma_agpr_per_mfma * mfma_pttn0_per_wv);
+		v_mfma_b_ping = newVgpr("mfma_b", mfma_bgpr_per_mfma * mfma_pttn1_per_wv);
+		v_mfma_a_pang = newVgpr("mfma_a", mfma_agpr_per_mfma * mfma_pttn0_per_wv);
+		v_mfma_b_pang = newVgpr("mfma_b", mfma_bgpr_per_mfma * mfma_pttn1_per_wv);
 
 		s_lds_write_cnt = newSgpr("lds_write_cnt");
 		s_lds_write_cnt_bck = newSgpr("lds_write_cnt_bck");
@@ -1972,12 +1968,14 @@ private:
 		}
 
 		// -----------------------------------------------------------------------
-		s_wait_cnt0();
 		for (uint32_t n = 0; n < mfma_pttn1_per_wv; n++)
 		{
 			for (uint32_t m = 0; m < mfma_pttn0_per_wv; m++)
 			{
 				uint32_t mfma_base_c_idx = (m + n * mfma_pttn0_per_wv) * mfma_dgpr_per_mfma;
+
+				uint32_t waitcnt = (mfma_pttn0_per_wv - 1 - m) * (mfma_pttn1_per_wv - 1 - n) * mfma_tile_num_per_mfma;
+				s_wait_vmcnt(waitcnt);
 
 				for (uint32_t t = 0; t < mfma_tile_num_per_mfma; t++)
 				{
@@ -2017,6 +2015,7 @@ private:
 		delVar(v_mfma_b_ping);
 		delVar(v_mfma_a_pang);
 		delVar(v_mfma_b_pang);
+
 		v_rslt_d = newVgpr("rslt_d", mfma_dgpr_per_mfma, 2);
 		T_Var v_bf16_msk = newVgpr("bf16_msk");
 		op2h("v_mov_b32", v_bf16_msk, 0xffff0000);
