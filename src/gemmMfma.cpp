@@ -103,24 +103,20 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	}
 	else
 	{
+		kernelWriter->SetArg("D", sizeof(float*), E_ArgKind::Global);
+		kernelWriter->SetArg("C", sizeof(float*), E_ArgKind::Global, true);
 		kernelWriter->SetArg("A", sizeof(float*), E_ArgKind::Global, true);
 		kernelWriter->SetArg("B", sizeof(float*), E_ArgKind::Global, true);
-		kernelWriter->SetArg("C", sizeof(float*), E_ArgKind::Global, true);
-		kernelWriter->SetArg("D", sizeof(float*), E_ArgKind::Global);
-		kernelWriter->SetArg("StrideA0", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("StrideB0", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("StrideC0", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("StrideD0", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("BatchStrideA", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("BatchStrideB", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("BatchStrideC", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("BatchStrideD", sizeof(uint32_t), E_ArgKind::Value);
 		kernelWriter->SetArg("Alpha", sizeof(float), E_ArgKind::Value);
 		kernelWriter->SetArg("Beta", sizeof(float), E_ArgKind::Value);
-		kernelWriter->SetArg("M", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("N", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("K", sizeof(uint32_t), E_ArgKind::Value);
-		kernelWriter->SetArg("Batch", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("StrideD0", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("BatchStrideD", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("StrideC0", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("BatchStrideC", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("StrideA0", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("BatchStrideA", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("StrideB0", sizeof(uint32_t), E_ArgKind::Value);
+		kernelWriter->SetArg("BatchStrideB", sizeof(uint32_t), E_ArgKind::Value);
 	}
 	ChkErr(kernelWriter->GenKernelString());
 	kernelWriter->SaveKernelString2File();
@@ -149,29 +145,26 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	if (g_DataType == 1)
 	{
 		setParam(k,
-			g_DataA, g_DataB, g_DataC, g_DataD,
-			StrideA0, StrideB0, StrideC0, StrideD0,
-			BatchStrideA, BatchStrideB, BatchStrideC, BatchStrideD,
+			g_DataD, g_DataC, g_DataA, g_DataB,
 			Alpha, Beta,
-			M, N, K,Batch);
+			StrideD0, BatchStrideD, StrideC0, BatchStrideC,
+			StrideA0, BatchStrideA, StrideB0, BatchStrideB);
 	}
 	else if (g_DataType == 2)
 	{
 		setParam(k,
-			g_hfDataA, g_hfDataB, g_hfDataC, g_hfDataD,
-			StrideA0, StrideB0, StrideC0, StrideD0,
-			BatchStrideA, BatchStrideB, BatchStrideC, BatchStrideD,
+			g_hfDataD, g_hfDataC, g_hfDataA, g_hfDataB, 
 			Alpha, Beta,
-			M, N, K, Batch);
+			StrideD0, BatchStrideD, StrideC0, BatchStrideC,
+			StrideA0, BatchStrideA, StrideB0, BatchStrideB);
 	}
 	else if (g_DataType == 3)
 	{
 		setParam(k,
-			g_bfDataA, g_bfDataB, g_DataC, g_bfDataD,
-			StrideA0, StrideB0, StrideC0, StrideD0,
-			BatchStrideA, BatchStrideB, BatchStrideC, BatchStrideD,
+			g_bfDataD, g_DataC, g_bfDataA, g_bfDataB, 
 			Alpha, Beta,
-			M, N, K, Batch);
+			StrideD0, BatchStrideD, StrideC0, BatchStrideC,
+			StrideA0, BatchStrideA, StrideB0, BatchStrideB);
 	}
 
 	score.Calculation = 2.0 * M*N*K*Batch;

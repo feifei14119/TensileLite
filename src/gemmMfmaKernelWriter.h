@@ -74,26 +74,24 @@ protected:
 	uint32_t c_elem_sz;
 
 	// -----------------------------------------------------------------------
-	uint32_t argidx_A;
-	uint32_t argidx_B;
-	uint32_t argidx_C;
-	uint32_t argidx_D;
-	uint32_t argidx_StrA0;
-	uint32_t argidx_StrB0;
-	uint32_t argidx_StrC0;
-	uint32_t argidx_StrD0;
-	uint32_t argidx_BtStrA;
-	uint32_t argidx_BtStrB;
-	uint32_t argidx_BtStrC;
-	uint32_t argidx_BtStrD;
-	uint32_t argidx_Alpha;
-	uint32_t argidx_Beta;
-	uint32_t argidx_M;
-	uint32_t argidx_N;
-	uint32_t argidx_K;
-	uint32_t argidx_Batch;
-	uint32_t argidx_DbgBuff;
-	T_Var s_args_tmp;
+	uint32_t argidx_A, argbias_A;
+	uint32_t argidx_B, argbias_B;
+	uint32_t argidx_C, argbias_C;
+	uint32_t argidx_D, argbias_D;
+	uint32_t argidx_StrA0, argbias_StrA0;
+	uint32_t argidx_StrB0, argbias_StrB0;
+	uint32_t argidx_StrC0, argbias_StrC0;
+	uint32_t argidx_StrD0, argbias_StrD0;
+	uint32_t argidx_BtStrA, argbias_BtStrA;
+	uint32_t argidx_BtStrB, argbias_BtStrB;
+	uint32_t argidx_BtStrC, argbias_BtStrC;
+	uint32_t argidx_BtStrD, argbias_BtStrD;
+	uint32_t argidx_Alpha, argbias_Alpha;
+	uint32_t argidx_Beta, argbias_Beta;
+	uint32_t argidx_M, argbias_M;
+	uint32_t argidx_N, argbias_N;
+	uint32_t argidx_K, argbias_K;
+	uint32_t argidx_Batch, argbias_Batch;
 
 	// -----------------------------------------------------------------------
 	uint32_t mfma_pttn0_per_wv;
@@ -229,96 +227,25 @@ protected:
 
 	E_ReturnState writeProgramDetail()
 	{
-		if (k_param.enTensileLayout == true)
-		{
-			uint32_t bias = 0;
-			T_Var s_arg;
-
-			s_args.clear();
-			/*0*/	s_arg = newSgpr("SzC", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 0 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*1*/	s_arg = newSgpr("SzA", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 1 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*2*/	s_arg = newSgpr("SzB", 2, 2);	/*s_load_dword(2, s_arg, s_argsAddr, 8 * 2 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*3*/	s_arg = newSgpr("D", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 3 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*4*/	s_arg = newSgpr("C", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 4 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*5*/	s_arg = newSgpr("A", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 5 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*6*/	s_arg = newSgpr("B", 2, 2);		/*s_load_dword(2, s_arg, s_argsAddr, 8 * 6 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*7*/	s_arg = newSgpr("alpha");		/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 0);		*/s_args.push_back(s_arg);
-			/*8*/	s_arg = newSgpr("beta");		/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 1);		*/s_args.push_back(s_arg);
-			/*9*/	s_arg = newSgpr("StrideD0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 2);		*/s_args.push_back(s_arg);
-			/*10*/	s_arg = newSgpr("StrideD1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 3);		*/s_args.push_back(s_arg);
-			/*11*/	s_arg = newSgpr("StrideC0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 4);		*/s_args.push_back(s_arg);
-			/*12*/	s_arg = newSgpr("StrideC1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 5);		*/s_args.push_back(s_arg);
-			/*13*/	s_arg = newSgpr("StrideA0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 6);		*/s_args.push_back(s_arg);
-			/*14*/	s_arg = newSgpr("StrideA1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 7);		*/s_args.push_back(s_arg);
-			/*15*/	s_arg = newSgpr("StrideB0");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 8);		*/s_args.push_back(s_arg);
-			/*16*/	s_arg = newSgpr("StrideB1");	/*s_load_dword(1, s_arg, s_argsAddr, 8 * 7 + 4 * 9);		*/s_args.push_back(s_arg);
-#if 0
-			//	s_load_dword(1, s_args[argidxM], s_argsAddr, 8 * 7 + 4 * 10);
-			//	s_load_dword(1, s_args[argidx_N], s_argsAddr, 8 * 7 + 4 * 11);
-			s_load_dword(1, s_args[argidx_StrD0], s_argsAddr, 8 * 7 + 4 * 2);
-			//	s_load_dword(1, s_args[argidx_StrA0], s_argsAddr, 8 * 7 + 4 * 6);
-			//	s_load_dword(1, s_args[argidx_StrB0], s_argsAddr, 8 * 7 + 4 * 8);
-			s_load_dword(1, s_args[argidx_K], s_argsAddr, 8 * 7 + 4 * 13);
-
-			s_args_tmp = newSgpr("args_tmp", 4, 4);
-			s_load_dword(4, s_args_tmp, s_argsAddr, 8 * 7 + 4 * 6);
-			s_args_tmp = s_args_tmp ^ 1;
-#endif
-			f_load_kernel_args();
-
-		}
-		else
-		{
-#if 0
-			s_args.clear();
-			uint32_t bias = 0;
-			T_Var s_arg;
-			T_Var zhanwei1 = newSgpr("zhanwei1");
-			T_Var zhanwei2 = newSgpr("zhanwei2", 2, 2);
-			s_arg = newSgpr("pA", 2, 4);	s_args.push_back(s_arg);
-			s_arg = newSgpr("pB", 2, 2);	s_args.push_back(s_arg);
-			s_arg = newSgpr("pC", 2, 4);	s_args.push_back(s_arg);
-			s_arg = newSgpr("pD", 2, 2);	s_args.push_back(s_arg);
-			s_arg = newSgpr("StA", 1, 4);	s_args.push_back(s_arg);
-			s_arg = newSgpr("StB");			s_args.push_back(s_arg);
-			s_arg = newSgpr("StC");			s_args.push_back(s_arg);
-			s_arg = newSgpr("StD");			s_args.push_back(s_arg);
-			s_arg = newSgpr("BtStA", 1, 4);	s_args.push_back(s_arg);
-			s_arg = newSgpr("BtStB");		s_args.push_back(s_arg);
-			s_arg = newSgpr("BtStC");		s_args.push_back(s_arg);
-			s_arg = newSgpr("BtStD");		s_args.push_back(s_arg);
-			s_arg = newSgpr("Alpha", 1, 2);	s_args.push_back(s_arg);
-			s_arg = newSgpr("Beta");		s_args.push_back(s_arg);
-			s_arg = newSgpr("M");			s_args.push_back(s_arg);
-			s_arg = newSgpr("N");			s_args.push_back(s_arg);
-			s_arg = newSgpr("K");			s_args.push_back(s_arg);
-			s_arg = newSgpr("Batch");		s_args.push_back(s_arg);
-			delVar(zhanwei1);
-			delVar(zhanwei2);
-
-			s_load_dword(4, s_args[argidx_A] ^ 4, s_argsAddr, bias);	bias += 8 * 2;
-			s_load_dword(4, s_args[argidx_C] ^ 4, s_argsAddr, bias);	bias += 8 * 2;
-			s_load_dword(4, s_args[argidx_StrA0] ^ 4, s_argsAddr, bias);	bias += 4 * 4;
-			s_load_dword(4, s_args[argidx_BtStrA] ^ 4, s_argsAddr, bias);	bias += 4 * 4;
-			s_load_dword(2, s_args[argidx_Alpha] ^ 2, s_argsAddr, bias);	bias += 4 * 2;
-
-			s_args[argidx_A] = s_args[argidx_A] ^ 1;
-			s_args[argidx_B] = s_args[argidx_B] ^ 1;
-			s_args[argidx_C] = s_args[argidx_C] ^ 1;
-			s_args[argidx_D] = s_args[argidx_D] ^ 1;
-			s_args[argidx_StrA0] = s_args[argidx_StrA0] ^ 1;
-			s_args[argidx_StrB0] = s_args[argidx_StrB0] ^ 1;
-			s_args[argidx_StrC0] = s_args[argidx_StrC0] ^ 1;
-			s_args[argidx_StrD0] = s_args[argidx_StrD0] ^ 1;
-			s_args[argidx_BtStrA] = s_args[argidx_BtStrA] ^ 1;
-			s_args[argidx_BtStrB] = s_args[argidx_BtStrB] ^ 1;
-			s_args[argidx_BtStrC] = s_args[argidx_BtStrC] ^ 1;
-			s_args[argidx_BtStrD] = s_args[argidx_BtStrD] ^ 1;
-			s_args[argidx_Alpha] = s_args[argidx_Alpha] ^ 1;
-			s_args[argidx_Beta] = s_args[argidx_Beta] ^ 1;
-#endif
-			f_load_kernel_args();
-		}
+		s_args.clear();
+		uint32_t bias = 0;
+		T_Var s_arg;
+		T_Var zhanwei = newSgpr("zhanwei");
+		s_arg = newSgpr("pD", 2, 2);	s_args.push_back(s_arg);
+		s_arg = newSgpr("pC", 2, 2);	s_args.push_back(s_arg);
+		s_arg = newSgpr("pA", 2, 2);	s_args.push_back(s_arg);
+		s_arg = newSgpr("pB", 2, 2);	s_args.push_back(s_arg);
+		s_arg = newSgpr("Alpha", 1, 2);	s_args.push_back(s_arg);
+		s_arg = newSgpr("Beta");		s_args.push_back(s_arg);
+		s_arg = newSgpr("StD", 1, 4);	s_args.push_back(s_arg);
+		s_arg = newSgpr("BtStD");		s_args.push_back(s_arg);
+		s_arg = newSgpr("StC");			s_args.push_back(s_arg);
+		s_arg = newSgpr("BtStC");		s_args.push_back(s_arg);
+		s_arg = newSgpr("StA", 1, 4);	s_args.push_back(s_arg);
+		s_arg = newSgpr("BtStA");		s_args.push_back(s_arg);
+		s_arg = newSgpr("StB");			s_args.push_back(s_arg);
+		s_arg = newSgpr("BtStB");		s_args.push_back(s_arg);
+		delVar(zhanwei);
 
 		// =======================================================================
 		v_tmp1 = newVgpr("v_tmp1"); v_tmp2 = newVgpr("v_tmp2", 2, 2);
@@ -393,70 +320,22 @@ protected:
 	}
 	E_ReturnState checkKernelParameters()
 	{
-		if (k_param.enTensileLayout == true)
-		{
-			//tensor2dSizeC = 0;
-			//tensor2dSizeA = 1;
-			//tensor2dSizeB = 2;
-			//dataD = 3;
-			//dataC = 4;
-			//dataA = 5;
-			//dataB = 6;
-			//alpha = 7;
-			//beta = 8;
-			//strideD1J = 9;
-			//strideD2K = 10;
-			//strideC1J = 11;
-			//strideC2K = 12;
-			//strideA1I = 13;
-			//strideA2K = 14;
-			//strideB1J = 15;
-			//strideB2K = 16;
-			//sizeI = 17;
-			//sizeJ = 18;
-			//sizeK = 19;
-			//sizeL = 20;
-			//tensor2dSizeC = 21;
-			//tensor2dSizeA = 22;
-			//tensor2dSizeB = 23;
-			//staggerUIter = 24;
-
-			argidx_D = 3;
-			argidx_C = 4;
-			argidx_A = 5;
-			argidx_B = 6;
-			argidx_Alpha = 7;	argidx_Beta = 8;
-			argidx_StrD0 = 9;	argidx_BtStrD = 10;			
-			argidx_StrC0 = 11;	argidx_BtStrC = 12;
-			argidx_StrA0 = 13;	argidx_BtStrA = 14;
-			argidx_StrB0 = 15;	argidx_BtStrB = 16;
-			argidx_M = 17;
-			argidx_N = 18;
-			argidx_K = 20;
-		}
-		else
-		{
-			uint32_t tmpcnt = 0;
-			argidx_A = tmpcnt++;
-			argidx_B = tmpcnt++;
-			argidx_C = tmpcnt++;
-			argidx_D = tmpcnt++;
-			argidx_StrA0 = tmpcnt++;
-			argidx_StrB0 = tmpcnt++;
-			argidx_StrC0 = tmpcnt++;
-			argidx_StrD0 = tmpcnt++;
-			argidx_BtStrA = tmpcnt++;
-			argidx_BtStrB = tmpcnt++;
-			argidx_BtStrC = tmpcnt++;
-			argidx_BtStrD = tmpcnt++;
-			argidx_Alpha = tmpcnt++;
-			argidx_Beta = tmpcnt++;
-			argidx_M = tmpcnt++;
-			argidx_N = tmpcnt++;
-			argidx_K = tmpcnt++;
-			argidx_Batch = tmpcnt++;
-			argidx_DbgBuff = tmpcnt++;
-		}
+		uint32_t idxbase = 0;
+		uint32_t biasbase = (k_param.enTensileLayout == true) ? 8 * 3 : 8 * 0;
+		argidx_D = idxbase++;		argbias_D = biasbase + 8 * 0;
+		argidx_C = idxbase++;		argbias_C = biasbase + 8 * 1;
+		argidx_A = idxbase++;		argbias_A = biasbase + 8 * 2;
+		argidx_B = idxbase++;		argbias_B = biasbase + 8 * 3;
+		argidx_Alpha = idxbase++;	argbias_Alpha = biasbase + 8 * 4 + 4 * 0;
+		argidx_Beta = idxbase++;	argbias_Beta = biasbase + 8 * 4 + 4 * 1;
+		argidx_StrD0 = idxbase++;	argbias_StrD0 = biasbase + 8 * 4 + 4 * 2;
+		argidx_BtStrD = idxbase++;	argbias_BtStrD = biasbase + 8 * 4 + 4 * 3;
+		argidx_StrC0 = idxbase++;	argbias_StrC0 = biasbase + 8 * 4 + 4 * 4;
+		argidx_BtStrC = idxbase++;	argbias_BtStrC = biasbase + 8 * 4 + 4 * 5;
+		argidx_StrA0 = idxbase++;	argbias_StrA0 = biasbase + 8 * 4 + 4 * 6;
+		argidx_BtStrA = idxbase++;	argbias_BtStrA = biasbase + 8 * 4 + 4 * 7;
+		argidx_StrB0 = idxbase++;	argbias_StrB0 = biasbase + 8 * 4 + 4 * 8;
+		argidx_BtStrB = idxbase++;	argbias_BtStrB = biasbase + 8 * 4 + 4 * 9;
 		
 		// ---------------------------------------------------------------------
 		mfma_dgpr_per_mfma = mfma_m * mfma_n * mfma_b / WAVE_SIZE;
@@ -526,20 +405,23 @@ protected:
 private:
 	void fetch_wave()
 	{
-		s_wait_lgkmcnt(0);
-		/*if (k_param.enTensileLayout == true)
-		{
-			op2("s_mov_b32", s_args[argidx_StrA0], s_args_tmp + 0);
-			op2("s_mov_b32", s_args[argidx_StrB0], s_args_tmp + 2);
-			s_args_tmp = s_args_tmp ^ 4;
-			delVar(s_args_tmp);
-		}*/
+		s_load_dword(2, s_args[argidx_A], s_argsAddr, argbias_A);
+		s_load_dword(2, s_args[argidx_B], s_argsAddr, argbias_B);
+		s_load_dword(4, s_args[argidx_StrA0] ^ 4, s_argsAddr, argbias_StrA0);
+	
+		s_args[argidx_A] = s_args[argidx_A] ^ 1;
+		s_args[argidx_B] = s_args[argidx_B] ^ 1;
+		s_args[argidx_StrA0] = s_args[argidx_StrA0] ^ 1;
+		s_args[argidx_StrB0] = s_args[argidx_StrB0] ^ 1;
+		s_args[argidx_BtStrA] = s_args[argidx_BtStrA] ^ 1;
+		s_args[argidx_BtStrB] = s_args[argidx_BtStrB] ^ 1;
 
-		addr_at_1();
-		addr_bn_1();
+		// ---------------------------------------------------------------------
 		addr_at_2();
 		addr_bn_2();
 		s_wait_lgkmcnt(0);
+		addr_at_1();
+		addr_bn_1();
 		
 		fetch_loop();
 
@@ -552,13 +434,29 @@ private:
 		for (uint32_t i = 0; i < mfma_dgpr_per_mfma * mfma_blk_per_wv; i++)
 			op2("v_accvgpr_write", acc_mfma_d + i, 0);
 
-		s_wait_lgkmcnt(0);
+		s_load_dword(2, s_args[argidx_C], s_argsAddr, argbias_C);
+		s_load_dword(2, s_args[argidx_D], s_argsAddr, argbias_D);
+		s_load_dword(2, s_args[argidx_Alpha] ^ 2, s_argsAddr, argbias_Alpha);
+		s_load_dword(4, s_args[argidx_StrD0] ^ 4, s_argsAddr, argbias_StrD0);
+		
+		s_args[argidx_C] = s_args[argidx_C] ^ 1;
+		s_args[argidx_D] = s_args[argidx_D] ^ 1;
+		s_args[argidx_StrC0] = s_args[argidx_StrC0] ^ 1;
+		s_args[argidx_StrD0] = s_args[argidx_StrD0] ^ 1;
+		s_args[argidx_BtStrC] = s_args[argidx_BtStrC] ^ 1;
+		s_args[argidx_BtStrD] = s_args[argidx_BtStrD] ^ 1;
+
+		s_args[argidx_Alpha] = s_args[argidx_Alpha] ^ 1;
+		s_args[argidx_Beta] = s_args[argidx_Beta] ^ 1;
+
+		// ---------------------------------------------------------------------
 		addr_at_3();
 		addr_bn_3();
-		addr_cn_1();
-		fetch_c();
-		addr_dn(); 
 		s_wait_lgkmcnt(0);
+		addr_cn_1();
+		addr_dn(); 
+
+		fetch_c();
 
 		math_loop();
 
@@ -638,11 +536,11 @@ private:
 		s_a_dscp = newSgpr("dscr_a", 4, 4);
 		if (k_param.enTensileLayout == true)
 		{
-			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 8 * 5 + 4 * 0);
+			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr, 8 * 5 + 4 * 0);
 		}
 		else
 		{
-			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr ^ 2, 0);
+			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr, 8 * 0);
 		}
 		s_a_dscp = s_a_dscp ^ 1;
 		op2("s_mov_b32", s_a_dscp + 0, s_args[argidx_A] + 0);
@@ -937,7 +835,7 @@ private:
 		}
 		else
 		{
-			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 4 * 2);
+			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr, 8 * 1);
 		}
 		s_b_dscp = s_b_dscp ^ 1;
 		op2("s_mov_b32", s_b_dscp + 0, s_args[argidx_B] + 0);
@@ -1177,9 +1075,17 @@ private:
 	{
 		// ---------------------------------------------------------------------
 		s_c_dscp = newSgpr("dscr_c", 4, 4);
+		if (k_param.enTensileLayout == true)
+		{
+			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 8 * 6 + 4 * 0);
+		}
+		else
+		{
+			//s_load_dword(2, s_c_dscp ^ 2, s_argsAddr, 8 * 2);
+		}
+		s_c_dscp = s_c_dscp ^ 1;
 		op2("s_mov_b32", s_c_dscp + 0, s_args[argidx_C] + 0);
 		op2("s_mov_b32", s_c_dscp + 1, s_args[argidx_C] + 1);
-		s_c_dscp = s_c_dscp ^ 1;
 		op2h("s_mov_b32", s_c_dscp + 2, 0x80000000);
 		op2h("s_mov_b32", s_c_dscp + 3, 0x00020000);
 		s_c_dscp = s_c_dscp ^ 4;
@@ -1272,7 +1178,7 @@ private:
 		}
 		else
 		{
-			//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 4 * 4);
+			//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr, 8 * 3);
 		}
 		s_d_dscp = s_d_dscp ^ 1;
 		op2("s_mov_b32", s_d_dscp + 0, s_args[argidx_D] + 0);
@@ -1740,12 +1646,12 @@ private:
 			for (uint32_t i = 0; i < mfma_dgpr_per_mfma; i++)
 			{
 				op2("v_accvgpr_read", v_rslt_d + i, (acc_mfma_d + (mfma_idx + i)) ^ 1);
-				op1("s_nop", 32);
-				op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
 
-				if (k_param.DataType == E_DataType::Fp32) // fp32
+				if (k_param.DataType == E_DataType::Fp32)
 				{
 					op1("s_nop", 4);
+					op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
+
 					if ((i + 1) % 4 == 0)
 					{
 						uint32_t instr_offset = m1 * d_glb_step2 + d_glb_step1 * (i / 4);
@@ -1757,9 +1663,11 @@ private:
 							instr_offset);
 					}
 				}
-				if (k_param.DataType == E_DataType::Fp16) // fp16
+				if (k_param.DataType == E_DataType::Fp16)
 				{
+					op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
 					op2("v_cvt_f16_f32", v_rslt_d + i, v_rslt_d + i);
+
 					if ((i + 1) % 2 == 0)
 					{
 						op3("v_pack_b32_f16", v_rslt_d + (i / 2), v_rslt_d + (i - 1), v_rslt_d + i);
@@ -1775,8 +1683,11 @@ private:
 							instr_offset);
 					}
 				}
-				if (k_param.DataType == E_DataType::Bf16) // bf16
+				if (k_param.DataType == E_DataType::Bf16)
 				{
+					op1("s_nop", 4);
+					op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
+
 					if ((i + 1) % 2 == 0)
 					{
 						op3("v_lshrrev_b32", v_rslt_d + (i - 1), 16, v_rslt_d + (i - 1));
@@ -1824,12 +1735,12 @@ private:
 			for (uint32_t i = 0; i < mfma_dgpr_per_mfma; i++)
 			{
 				op2("v_accvgpr_read", v_rslt_d + i, (acc_mfma_d + (mfma_idx + i)) ^ 1);
-				op1("s_nop", 32);
-				op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
 
-				if (k_param.DataType == E_DataType::Fp32) // fp32
+				if (k_param.DataType == E_DataType::Fp32)
 				{
 					op1("s_nop", 4);
+					op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
+
 					if ((i + 1) % 4 == 0)
 					{
 						uint32_t instr_offset = m1 * d_glb_step2 + d_glb_step1 * (i / 4);
@@ -1841,9 +1752,11 @@ private:
 							instr_offset);
 					}
 				}
-				if (k_param.DataType == E_DataType::Fp16) // fp16
+				if (k_param.DataType == E_DataType::Fp16)
 				{
+					op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
 					op2("v_cvt_f16_f32", v_rslt_d + i, v_rslt_d + i);
+
 					if ((i + 1) % 2 == 0)
 					{
 						op3("v_pack_b32_f16", v_rslt_d + (i / 2), v_rslt_d + (i - 1), v_rslt_d + i);
@@ -1859,8 +1772,11 @@ private:
 							instr_offset);
 					}
 				}
-				if (k_param.DataType == E_DataType::Bf16) // bf16
+				if (k_param.DataType == E_DataType::Bf16)
 				{
+					op1("s_nop", 4);
+					op4("v_fma_f32", v_rslt_d + i, s_args[argidx_Alpha], v_rslt_d + i, v_glb_load_c + mfma_idx + i);
+
 					if ((i + 1) % 2 == 0)
 					{
 						op3("v_lshrrev_b32", v_rslt_d + (i - 1), 16, v_rslt_d + (i - 1));
@@ -1927,9 +1843,9 @@ private:
 
 		s_wait_lgkmcnt(0);
 
-	//	mfma_mfma_pang_with_store();
-		mfma_mfma_pang();
-		store_result();
+		mfma_mfma_pang_with_store();
+		//mfma_mfma_pang();
+		//store_result();
 	}
 
 	// =======================================================================

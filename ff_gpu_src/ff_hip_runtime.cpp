@@ -119,7 +119,7 @@ namespace feifei
 
 		programType = type;
 		this->kernelName = kernelName;
-		kernelFile = RuntimeHip::GetInstance()->KernelTempDir() + get_file_name(programFile) + ".o";
+		kernelFile = RuntimeHip::GetInstance()->KernelTempDir() + DIR_SPT + get_file_name(programFile) + ".o";
 
 		device = (DeviceHip*)(RuntimeHip::GetInstance())->Device();
 
@@ -211,7 +211,7 @@ namespace feifei
 		default:ERR("not support hardware.");
 		}
 
-		std::string tmpfile = RuntimeHip::GetInstance()->KernelTempDir() + get_file_name(programFile) + ".co";
+		std::string tmpfile = RuntimeHip::GetInstance()->KernelTempDir() + DIR_SPT + get_file_name(programFile) + ".co";
 
 		std::string cmd = compiler + " " + buildOption + "-o " + tmpfile + " " + programFile;
 		exec_cmd(cmd);
