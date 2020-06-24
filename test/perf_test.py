@@ -1,5 +1,8 @@
 # nohup python3 perf_test.py > test.log 2>&1 &
 # jobs
+# kill %jobnum
+# fg %jobnum
+# bg %jobnum
 
 import subprocess
 import os, re 
@@ -24,6 +27,21 @@ def writeFile(filename, data):
 	
 def testOneParam(d, m,n,k, r,s,x,y,z,u,f,p):
 	cmd = "../TensileLite.out -m {0} -n {1} -k {2} -l 100 -v 0 -f {10} -t 0 -r {3} -s {4} -x {5} -y {6} -z {7} -u {8} -d {9} -p {11}".format(m,n,k,r,s,x,y,z,u,d,f,p)
+	print(cmd)
+	result = execCmd(cmd)
+	result = re.split("\n", result)
+	tflops = float(0)
+	for line in result:
+		idx1 = line.rfind("]Performance = ")
+		idx2 = line.rfind("TFLOPs")
+		if(idx1 != -1):
+			print(line)
+			line = line[idx1 + len("]Performance = "):idx2-1]
+			tflops = float(line)
+	return tflops
+	
+def GenTensileKernel(d, m,n,k, r,s,x,y,z,u,f,p):
+	cmd = "../TensileLite.out -m {0} -n {1} -k {2} -l 1 -v 0 -f {10} -t 1 -r {3} -s {4} -x {5} -y {6} -z {7} -u {8} -d {9} -p {11}".format(m,n,k,r,s,x,y,z,u,d,f,p)
 	print(cmd)
 	result = execCmd(cmd)
 	result = re.split("\n", result)
@@ -146,6 +164,8 @@ def testOneSize(d, m,n,k):
 	worksheet.write(xl_row_cnt, xl_col_cnt, label = best_tflops);	xl_col_cnt = xl_col_cnt + 1;
 	worksheet.write(xl_row_cnt, xl_col_cnt, label = efficiency);  	xl_col_cnt = xl_col_cnt + 1;
 	
+	GenTensileKernel(d, m,n,k, best_r,best_s,best_x,best_y,best_z,best_u,best_f,best_p);
+	
 def testAll():
 	global workbook; 
 	global worksheet; 
@@ -153,109 +173,26 @@ def testAll():
 	workbook = xlwt.Workbook(encoding = 'utf-8');
 	
 	#cmd = 'sudo ~/umr -i 1 -w arcturus.gfx90.mmSQ_CONFIG 0x01180000';execCmd(cmd)
-	#d = 1; 	worksheet = workbook.add_sheet('fp32'); xl_row_cnt = 2;
-	#m = 960; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 1920; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 3840; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 7680; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	d = 1; 	worksheet = workbook.add_sheet('fp32'); xl_row_cnt = 2;
+	m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 1024; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 2048; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	
-	#d = 3; 	worksheet = workbook.add_sheet('bf16'); xl_row_cnt = 2;
-	#m = 960; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 1920; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 3840; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 7680; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	d = 2; 	worksheet = workbook.add_sheet('fp16'); xl_row_cnt = 2;
+	m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 1024; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 2048; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 960; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	
-	#cmd = 'sudo ~/umr -i 1 -w arcturus.gfx90.mmSQ_CONFIG 0x01180001';execCmd(cmd)
-	#d = 2; 	worksheet = workbook.add_sheet('fp16'); xl_row_cnt = 2;
-	#m = 960; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 1920; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 3840; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	#m = 7680; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	d = 3; 	worksheet = workbook.add_sheet('bf16'); xl_row_cnt = 2;
+	m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 1024; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 2048; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	
-	#workbook.save('gemm_perf.xls')
-	
-	# #####################################################################################################
-	# #####################################################################################################
-	
-	#cmd = 'sudo ~/umr -i 1 -w arcturus.gfx90.mmSQ_CONFIG 0x01180000';execCmd(cmd)
-	#d = 1; 	worksheet = workbook.add_sheet('fp32'); xl_row_cnt = 2;
-	#m = 480; n = 512;  k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512; n = 512;  k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512;  n = 480; k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 1024; n = 480; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 2048; n = 480; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 4096; n = 480; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 8192; n = 480; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512;  n = 512; k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 1024; n = 512; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 2048; n = 512; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 4096; n = 512; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 8192; n = 512; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	
-	#d = 3; 	worksheet = workbook.add_sheet('bf16'); xl_row_cnt = 2;	
-	#m = 480; n = 512;  k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512; n = 512;  k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512;  n = 480; k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 1024; n = 480; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 2048; n = 480; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 4096; n = 480; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 8192; n = 480; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512;  n = 512; k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 1024; n = 512; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 2048; n = 512; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 4096; n = 512; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 8192; n = 512; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	
-	#cmd = 'sudo ~/umr -i 1 -w arcturus.gfx90.mmSQ_CONFIG 0x01180001';execCmd(cmd)
-	d = 2; 	worksheet = workbook.add_sheet('fp16'); xl_row_cnt = 2;	
-	m = 480; n = 512;  k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	m = 960; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 480; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512; n = 512;  k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 4096; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 512; n = 8192; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512;  n = 480; k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 1024; n = 480; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 2048; n = 480; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 4096; n = 480; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 8192; n = 480; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#
-	#m = 512;  n = 512; k = 512;		testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 1024; n = 512; k = 1024;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 2048; n = 512; k = 2048;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 4096; n = 512; k = 4096;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	#m = 8192; n = 512; k = 8192;	testOneSize(d,m,n,k);	workbook.save('phantom_perf.xls')
-	
-	workbook.save('phantom_perf.xls')
+	workbook.save('gemm_perf.xls')
 	
 if __name__ == '__main__': 
 	testAll()

@@ -1,0 +1,82 @@
+GlobalParameters:
+  NumElementsToValidate: 0
+  KernelTime: True
+  DataInitTypeAlpha: 1
+  DataInitTypeBeta: 0
+  NewClient: 2
+
+BenchmarkProblems:
+  ########################################
+  # TN - standard
+  ########################################
+  -
+    - # ProblemType
+      OperationType: GEMM
+      DataType: h
+      # DestDataType: B
+      # ComputeDataType: s
+      HighPrecisionAccumulate: True
+      TransposeA: True
+      TransposeB: False
+      UseBeta: True
+      Batched: True
+    - # BenchmarkProblemSizeGroup - Standard
+      InitialSolutionParameters:
+      BenchmarkCommonParameters:
+        - KernelLanguage: ["Assembly"]
+        - EdgeType: ["ShiftPtr"]
+        #- LoopTail: [True]
+      ForkParameters:
+        - MatrixInstruction:
+          - [32, 32, 4, 2]
+          - [32, 32, 8, 1]
+          - [16, 16, 4, 4]
+          - [16, 16, 16, 1]
+        - ThreadTile:
+          - [ 1, 16 ]
+          - [ 2, 16 ]
+          - [ 1, 32 ]
+          - [ 2, 32 ]
+          - [ 2, 64 ]
+        - WorkGroup:
+          - [ 128, 2, 1 ]
+          - [ 64, 4, 1 ]
+          - [ 32, 8, 1 ]
+          - [ 16, 16, 1 ]
+        - AssertSummationElementMultiple: [1]
+        - AssertFree0ElementMultiple: [1]
+        - AssertFree1ElementMultiple: [1]
+        - PrefetchGlobalRead: [1]
+        - PrefetchLocalRead: [1]
+        - DepthU: [32,64]
+        - VectorWidth: [2]
+        - GlobalReadVectorWidth: [2,4,8]
+        - SuppressNoLoadLoop: [0]
+        - OptNoLoadLoop: [1]
+        - ScheduleLocalWrite: [1]
+        - ScheduleGlobalRead: [1]
+        - ScheduleIterAlg: [3]
+        - InnerUnroll: [1]
+        - ExpandPointerSwap: [1]
+        - StoreRemapVectorWidth: [0,4,8]
+        - TransposeLDS: [1]
+        - LdsBlockSizePerPad: [128]
+        - LdsPadA: [-1]
+        - LdsPadB: [-1]
+        - StaggerUMapping: [0,1]
+        - WorkGroupMapping: [1,10,120]
+        - WaveSeparateGlobalReadA: [0,1]
+        - WaveSeparateGlobalReadB: [0,1]
+      BenchmarkJoinParameters:
+      BenchmarkFinalParameters:
+        - ProblemSizes:
+          - Exact: [ 480, 1024, 1, 1024 , 512,  512,  1056, 1056]
+          - Exact: [ 480, 2048, 1, 2048 , 512,  512,  2048, 2048]
+          - Exact: [ 960, 1024, 1, 1024 , 992,  992,  1056, 1056]
+          - Exact: [ 1024, 480, 1, 480 , 1024,  1024,  480, 480]
+          - Exact: [ 2048, 480, 1, 480 , 2048,  2048,  480, 480]
+
+LibraryLogic:
+    ScheduleName: "arcturus"
+    DeviceNames: ["Device 7380", "Device 7388", "Device 738c", "Device 7390"]
+    ArchitectureName: "gfx908"
