@@ -1,0 +1,84 @@
+GlobalParameters:
+  MinimumRequiredVersion: 4.4.0
+  PrintLevel: 1
+  ForceRedoBenchmarkProblems: True
+  ForceRedoLibraryLogic: True
+  ForceRedoLibraryClient: True
+  CMakeBuildType: Release
+  EnqueuesPerSync: 1
+  SyncsPerBenchmark: 1
+  LibraryPrintDebug: False
+  NumElementsToValidate: 10
+  ValidationMaxToPrint: 4
+  ValidationPrintValids: False
+  ShortNames: False
+  MergeFiles: True
+  Platform: 0
+  Device: 0
+  KernelTime: True
+  PinClocks: False
+  SleepPercent: 200
+  DataInitTypeBeta : 1
+  DataInitTypeAlpha: 1
+  DataInitTypeA: 3
+  DataInitTypeB: 3
+  DataInitTypeC: 3
+  DataInitTypeD: 3
+  PrintTensorA: 0
+  PrintTensorB: 0
+  PrintTensorC: 0
+  PrintTensorD: 0
+  NewClient: 0
+  PrintSolutionRejectionReason: True
+  
+BenchmarkProblems:
+  ########################################
+  # TN - standard
+  ########################################
+  -
+    - # ProblemType
+      OperationType: GEMM
+      DataType: h
+      HighPrecisionAccumulate: True
+      TransposeA: True
+      TransposeB: False
+      UseBeta: True
+      Batched: True
+
+    - # BenchmarkProblemSizeGroup - Standard
+      InitialSolutionParameters:
+      BenchmarkCommonParameters:
+        - KernelLanguage: ["Assembly"]
+        - EdgeType: ["ShiftPtr"]
+        - LoopTail: [True]
+        - PrefetchLocalRead: [True]
+      ForkParameters:
+        - PrefetchGlobalRead: [True]
+        - ThreadTile:
+          - [ 2, 4 ]
+        - WorkGroup:
+          - [ 16, 64, 1 ]
+        - WorkGroupMapping: [8]
+        - GlobalSplitU: [1]
+        - DepthU: [32]
+        - VectorWidth: [-1]
+        #- GlobalReadVectorWidth: [2]
+        - FractionalLoad: [1]
+        - AssertSummationElementMultiple: [8]
+        - AssertFree0ElementMultiple: [8]
+        - ReplacementKernel: [True]
+      BenchmarkForkParameters:
+      JoinParameters:
+        - MacroTile
+        - GlobalSplitU
+      BenchmarkJoinParameters:
+      BenchmarkFinalParameters:
+        - ProblemSizes:
+          - Exact: [ 480, 2048, 1, 2048, 512, 512, 2080, 2080]
+
+#  ########################################
+LibraryLogic:
+   ScheduleName: "Arcturus"
+   DeviceNames: ["Device 738c"]
+   ArchitectureName: "gfx908"
+   

@@ -1,0 +1,70 @@
+# Cijk_Alik_Bljk_HBH_MT64x128x64_MI32x32x4x2_SE_GRVW8_K1_LPA8_LPB8_SUM1_SRVW8_TT1_32_WSGRA0_WSGRB1_WG64_4_1_WGM1	27118	31936	59075
+
+GlobalParameters:
+  NumElementsToValidate: 0
+  KernelTime: True
+  DataInitTypeAlpha: 1
+  DataInitTypeBeta: 0
+  NewClient: 2
+
+BenchmarkProblems:
+  ########################################
+  # TN - standard
+  ########################################
+  -
+    - # ProblemType
+      OperationType: GEMM
+      DataType: h
+      # DestDataType: B
+      # ComputeDataType: s
+      HighPrecisionAccumulate: True
+      TransposeA: True
+      TransposeB: False
+      UseBeta: True
+      Batched: True
+    - # BenchmarkProblemSizeGroup - Standard
+      InitialSolutionParameters:
+      BenchmarkCommonParameters:
+        - KernelLanguage: ["Assembly"]
+        - EdgeType: ["ShiftPtr"]
+        #- LoopTail: [True]
+      ForkParameters:
+        - MatrixInstruction:
+          - [32, 32, 4, 2]
+        - ThreadTile:
+          - [ 1, 32 ]
+        - WorkGroup:
+          - [ 64, 4, 1 ]
+        - AssertSummationElementMultiple: [1]
+        - AssertFree0ElementMultiple: [1]
+        - AssertFree1ElementMultiple: [1]
+        - PrefetchGlobalRead: [1]
+        - PrefetchLocalRead: [1]
+        - DepthU: [64]
+        - VectorWidth: [2]
+        - GlobalReadVectorWidth: [8]
+        - SuppressNoLoadLoop: [0]
+        - OptNoLoadLoop: [1]
+        - ScheduleLocalWrite: [1]
+        - ScheduleGlobalRead: [1]
+        - ScheduleIterAlg: [3]
+        - InnerUnroll: [1]
+        - ExpandPointerSwap: [1]
+        - StoreRemapVectorWidth: [8]
+        - TransposeLDS: [1]
+        - LdsBlockSizePerPad: [128]
+        - LdsPadA: [8]
+        - LdsPadB: [8]
+        - StaggerUMapping: [1]
+        - WorkGroupMapping: [1]
+        - WaveSeparateGlobalReadA: [0]
+        - WaveSeparateGlobalReadB: [1]
+      BenchmarkJoinParameters:
+      BenchmarkFinalParameters:
+        - ProblemSizes:
+          - Exact: [ 960, 1024, 1, 1024 , 992,  992,  1056, 1056]
+
+LibraryLogic:
+    ScheduleName: "arcturus"
+    DeviceNames: ["Device 7380", "Device 7388", "Device 738c", "Device 7390"]
+    ArchitectureName: "gfx908"

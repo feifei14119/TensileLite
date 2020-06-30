@@ -1,0 +1,80 @@
+# Cijk_Alik_Bljk_BBH_MT64x32x16_SE_TT8_4_WG8_8_1: 3.3685
+GlobalParameters:
+  MinimumRequiredVersion: 4.4.0
+  PrintLevel: 1
+  ForceRedoBenchmarkProblems: True
+  ForceRedoLibraryLogic: True
+  ForceRedoLibraryClient: True
+  CMakeBuildType: Release
+  EnqueuesPerSync: 1 # 100
+  NumBenchmarks: 1
+  SyncsPerBenchmark: 1
+  LibraryPrintDebug: False
+  NumElementsToValidate: 0
+  ValidationMaxToPrint: 0
+  ValidationPrintValids: False
+  ShortNames: False
+  MergeFiles: True
+  Platform: 0
+  Device: 0
+  KernelTime: True
+  PinClocks: False
+  SleepPercent: 0
+  DataInitTypeBeta : 0
+  DataInitTypeAlpha: 1
+  DataInitTypeA: 3
+  DataInitTypeB: 3
+  DataInitTypeC: 3
+  DataInitTypeD: 3
+  PrintTensorA: 0
+  PrintTensorB: 0
+  PrintTensorC: 0
+  PrintTensorD: 0
+  CEqualD: True
+  NewClient: 0
+
+BenchmarkProblems:
+  ########################################
+  # TN
+  ########################################
+  -
+    - # ProblemType
+      OperationType: GEMM
+      DataType: B
+      DestDataType: B
+      ComputeDataType: s
+      HighPrecisionAccumulate: True
+      TransposeA: True
+      TransposeB: False
+      UseBeta: True
+      Batched: True
+
+    - # BenchmarkProblemSizeGroup - Source
+      InitialSolutionParameters:
+      BenchmarkCommonParameters:
+        - LoopTail: [True]
+        - EdgeType: ["ShiftPtr"]
+      ForkParameters:
+        - KernelLanguage: ["Source"]
+        - GlobalSplitU: [1, 3]
+        - PrefetchLocalRead: [True]
+        - PrefetchGlobalRead: [False]
+        - ThreadTile:
+          - [ 8, 4 ]
+        - WorkGroup:
+          - [  8,  8,  1 ]
+        - DepthU: [16]
+        - VectorWidth: [1]
+      BenchmarkForkParameters:
+      JoinParameters:
+      BenchmarkJoinParameters:
+      BenchmarkFinalParameters:
+        - ProblemSizes:
+          - Exact: [ 2048, 480, 1, 480 , 2080,  2080,  480, 480]
+
+
+########################################
+LibraryLogic:
+    ScheduleName: "arcturus"
+    DeviceNames: ["Device 7380", "Device 7388", "Device 738c", "Device 7390"]
+    ArchitectureName: "gfx908"
