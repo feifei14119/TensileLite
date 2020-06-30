@@ -161,7 +161,7 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 	else if (g_DataType == 3)
 	{
 		setParam(k,
-			g_bfDataD, g_DataC, g_bfDataA, g_bfDataB, 
+			g_bfDataD, g_bfDataC, g_bfDataA, g_bfDataB, 
 			Alpha, Beta,
 			StrideD0, BatchStrideD, StrideC0, BatchStrideC,
 			StrideA0, BatchStrideA, StrideB0, BatchStrideB);
@@ -169,7 +169,7 @@ E_ReturnState GemmMfmaAsmSolution::generateKernel()
 
 	score.Calculation = 2.0 * M*N*K*Batch;
 	repeatTimes = *(uint32_t*)ca->GetOneArg(GEMM_ARG_LOOP);
-	repeatTimes = 5;
+	//repeatTimes = 5;
 
 	double sclk_mhz;
 	uint32_t cu_num;
@@ -195,7 +195,7 @@ void GemmMfmaProblem::initDataMem()
 	K = *(uint32_t*)ca->GetOneArg(GEMM_ARG_K);
 	g_cpuVerify = *(uint32_t*)ca->GetOneArg(GEMM_ARG_VERIFY);
 	Padding = *(uint32_t*)ca->GetOneArg(GEMM_ARG_PAD);
-
+	
 	/*g_DataType = 1;
 	M = 960;
 	N = 1024;
@@ -226,8 +226,8 @@ void GemmMfmaProblem::initDataMem()
 	
 	uint32_t lds_sz = (MAX_LDS_SIZE / GPR_SZ) * 1;
 
-	Alpha = 3.14f;
-	Beta = 2.718f;
+	Alpha = 0.314f;
+	Beta = 0.2718f;
 	g_DataA = newRealData<float>("matrix-a", 2.4f*(int)g_dataInit, StrideA0, M*Batch);
 	g_DataB = newRealData<float>("matrix-b", -2.4f*(int)g_dataInit, StrideB0, N*Batch);
 	g_DataC = newRealData<float>("matrix-c", 2.4f*(int)g_dataInit, StrideC0, N*Batch);

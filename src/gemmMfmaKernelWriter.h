@@ -52,7 +52,7 @@ public:
 		if (k_param.DataType == E_DataType::Bf16)
 		{
 			elem_sz = BF16_SZ;
-			c_elem_sz = FP32_SZ;
+			c_elem_sz = BF16_SZ;
 			if (k_param.mfma_mn == 16)	mfma_k = 8;
 			if (k_param.mfma_mn == 32)	mfma_k = 4;
 			if (k_param.mfma_mn == 16)	mfma_inst = "v_mfma_f32_16x16x8bf16";
@@ -391,6 +391,8 @@ protected:
 
 		if ((k_param.M % elem_num0_per_grp != 0) || (k_param.N % elem_num1_per_grp != 0))
 			return E_ReturnState::RTN_ERR;
+		if (k_param.K % k_param.loop_unroll != 0)
+			return E_ReturnState::RTN_ERR;
 		if ((k_param.loop_unroll / mfma_k / 2.0) < 1)
 			return E_ReturnState::RTN_ERR;
 		if ((math_wave_num_per_grp > 4) && (k_param.lds_buffer_num > 3))
@@ -534,14 +536,6 @@ private:
 	{
 		// ---------------------------------------------------------------------
 		s_a_dscp = newSgpr("dscr_a", 4, 4);
-		if (k_param.enTensileLayout == true)
-		{
-			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr, 8 * 5 + 4 * 0);
-		}
-		else
-		{
-			//s_load_dword(2, s_a_dscp ^ 2, s_argsAddr, 8 * 0);
-		}
 		s_a_dscp = s_a_dscp ^ 1;
 		op2("s_mov_b32", s_a_dscp + 0, s_args[argidx_A] + 0);
 		op2("s_mov_b32", s_a_dscp + 1, s_args[argidx_A] + 1);
@@ -829,14 +823,6 @@ private:
 	{
 		// ---------------------------------------------------------------------
 		s_b_dscp = newSgpr("dscr_b", 4, 4);
-		if (k_param.enTensileLayout == true)
-		{
-			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 8 * 6 + 4 * 0);
-		}
-		else
-		{
-			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr, 8 * 1);
-		}
 		s_b_dscp = s_b_dscp ^ 1;
 		op2("s_mov_b32", s_b_dscp + 0, s_args[argidx_B] + 0);
 		op2("s_mov_b32", s_b_dscp + 1, s_args[argidx_B] + 1);
@@ -1065,7 +1051,7 @@ private:
 	{
 		if (k_param.DataType == E_DataType::Fp32)c_fetch_instr_dw_sz = 4;
 		if (k_param.DataType == E_DataType::Fp16)c_fetch_instr_dw_sz = 2;
-		if (k_param.DataType == E_DataType::Bf16)c_fetch_instr_dw_sz = 4;
+		if (k_param.DataType == E_DataType::Bf16)c_fetch_instr_dw_sz = 2;
 
 		c_fetch_instr_sz = c_fetch_instr_dw_sz * GPR_SZ;
 
@@ -1075,14 +1061,6 @@ private:
 	{
 		// ---------------------------------------------------------------------
 		s_c_dscp = newSgpr("dscr_c", 4, 4);
-		if (k_param.enTensileLayout == true)
-		{
-			//s_load_dword(2, s_b_dscp ^ 2, s_argsAddr ^ 2, 8 * 6 + 4 * 0);
-		}
-		else
-		{
-			//s_load_dword(2, s_c_dscp ^ 2, s_argsAddr, 8 * 2);
-		}
 		s_c_dscp = s_c_dscp ^ 1;
 		op2("s_mov_b32", s_c_dscp + 0, s_args[argidx_C] + 0);
 		op2("s_mov_b32", s_c_dscp + 1, s_args[argidx_C] + 1);
@@ -1172,14 +1150,6 @@ private:
 	{
 		// -----------------------------------------------------------------------
 		s_d_dscp = newSgpr("dscr_d", 4, 4);
-		if (k_param.enTensileLayout == true)
-		{
-			//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr ^ 2, 8 * 3 + 4 * 0);
-		}
-		else
-		{
-			//s_load_dword(2, s_d_dscp ^ 2, s_argsAddr, 8 * 3);
-		}
 		s_d_dscp = s_d_dscp ^ 1;
 		op2("s_mov_b32", s_d_dscp + 0, s_args[argidx_D] + 0);
 		op2("s_mov_b32", s_d_dscp + 1, s_args[argidx_D] + 1);
@@ -1917,8 +1887,17 @@ private:
 							op3("v_mul_f32", v_glb_load_c + idx_hi, s_args[argidx_Beta], v_glb_load_c + idx_hi);
 						}
 						if (k_param.DataType == E_DataType::Bf16)
-						{
-							op3("v_mul_f32", v_glb_load_c + c_idx + i, s_args[argidx_Beta], v_glb_load_c + c_idx + i);
+						{														
+							int j = c_fetch_instr_dw_sz - 1 - i;
+							int idx_cvt = c_idx + j;
+							int idx_lw = c_idx + j * 2;
+							int idx_hi = c_idx + j * 2 + 1;
+							op3("v_lshlrev_b32", v_tmp1, 16, v_glb_load_c + idx_cvt);
+							op3("v_lshrrev_b32", v_glb_load_c + idx_cvt, 16, v_glb_load_c + idx_cvt);
+							op3("v_lshlrev_b32", v_glb_load_c + idx_hi, 16, v_glb_load_c + c_idx + j);
+							
+							op3("v_mul_f32", v_glb_load_c + idx_lw, s_args[argidx_Beta], v_tmp1);
+							op3("v_mul_f32", v_glb_load_c + idx_hi, s_args[argidx_Beta], v_glb_load_c + idx_hi);							
 						}
 					}
 				}
