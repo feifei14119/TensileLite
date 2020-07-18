@@ -176,21 +176,21 @@ def testAll():
 	d = 1; 	worksheet = workbook.add_sheet('fp32'); xl_row_cnt = 2;
 	m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	m = 1024; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	m = 2048; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 1024; n = 480; k = 1024;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 2048; n = 480; k = 2048;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	
 	d = 2; 	worksheet = workbook.add_sheet('fp16'); xl_row_cnt = 2;
 	m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	m = 1024; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	m = 2048; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 1024; n = 480; k = 1024;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 2048; n = 480; k = 2048;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	m = 960; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	
 	d = 3; 	worksheet = workbook.add_sheet('bf16'); xl_row_cnt = 2;
 	m = 480; n = 1024; k = 1024;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	m = 480; n = 2048; k = 2048;	testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	m = 1024; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
-	m = 2048; n = 480; k = 480;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 1024; n = 480; k = 1024;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
+	m = 2048; n = 480; k = 2048;		testOneSize(d,m,n,k);	workbook.save('gemm_perf.xls')
 	
 	workbook.save('gemm_perf.xls')
 	
