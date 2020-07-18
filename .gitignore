@@ -20,8 +20,8 @@ x86/
 bld/
 lib/
 out/
-libproj/
-ff_gpu_src/
+#libproj/
+#ff_gpu_src/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
@@ -263,5 +263,5 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/TensileLite.vcxproj.filters
-/TensileLite.vcxproj
+#/TensileLite.vcxproj.filters
+#/TensileLite.vcxproj

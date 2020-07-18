@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{d26c9151-4b4c-4753-a449-723adfae78ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{7675c481-811a-4fd2-9c37-31c797591481}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{dc4aab16-f7dc-41c1-81b4-2d9ffbdf6778}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\ff_gpu.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\ff_hip_runtime.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\ff_utils.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\IsaGenerater.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\KernelWriter.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gemmMfma.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gemmMfmaKernelWriter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\libff_gpu.a">
+      <Filter>lib</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gemmMfma.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
